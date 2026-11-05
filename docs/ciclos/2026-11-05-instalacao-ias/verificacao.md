@@ -83,4 +83,13 @@ Diagnóstico:
   mudaram: só `version` no manifest e fim de linha. O puppeteer continua 25.16.0 e o Chrome
   for Testing continua 156.0.8078.47.
 
-Falta rodar o e2e de novo com memória livre.
+Depois que o usuário fechou o Chrome (772 MB livres), o e2e rodou de novo:
+
+```
+13 PASS
+  list_tabs answered 180 ms after the stop
+  list_tabs answered 1049 ms after the owner closed
+all e2e steps passed
+```
+
+C7 atendido.
