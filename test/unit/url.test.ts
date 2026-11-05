@@ -14,4 +14,15 @@ describe("normalizeUrl", () => {
     expect(normalizeUrl("")).toBeNull();
     expect(normalizeUrl("not a url")).toBeNull();
   });
+  it("only allows http, https and about:blank", () => {
+    expect(normalizeUrl("javascript:alert(1)")).toBeNull();
+    expect(normalizeUrl("data:text/html,<b>x</b>")).toBeNull();
+    expect(normalizeUrl("file:///C:/x")).toBeNull();
+    expect(normalizeUrl("search-ms:query=x")).toBeNull();
+    expect(normalizeUrl("about:blank")).toBe("about:blank");
+  });
+  it("treats host:port followed by a query or hash as a host", () => {
+    expect(normalizeUrl("localhost:3000?x=1")).toBe("https://localhost:3000/?x=1");
+    expect(normalizeUrl("bank.com:8443#top")).toBe("https://bank.com:8443/#top");
+  });
 });

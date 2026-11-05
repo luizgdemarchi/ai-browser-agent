@@ -8,23 +8,42 @@ const attached = new Set<number>();
 export interface DialogInfo {
   type: string;
   message: string;
-  /** What the extension did: alerts are accepted, everything else is dismissed. */
+  /** What the extension did: alert and beforeunload are accepted, confirm and prompt dismissed. */
   handled: "accepted" | "dismissed";
 }
 /** JavaScript dialogs (alert/confirm/prompt/beforeunload) opened per tab since the last take. */
 const dialogs = new Map<number, DialogInfo[]>();
+/** Agent actions running per tab. Dialogs outside them belong to the user and are left alone. */
+const acting = new Map<number, number>();
+
+/** Runs an agent action on a tab, so dialogs it opens are handled and reported. */
+export async function asAgent<T>(tabId: number, fn: () => Promise<T>): Promise<T> {
+  acting.set(tabId, (acting.get(tabId) ?? 0) + 1);
+  try {
+    return await fn();
+  } finally {
+    // Dialogs can open right after the input event; keep handling them for a moment.
+    setTimeout(() => {
+      const n = (acting.get(tabId) ?? 1) - 1;
+      if (n > 0) acting.set(tabId, n);
+      else acting.delete(tabId);
+    }, 1000);
+  }
+}
 
 chrome.debugger.onDetach.addListener((source) => {
   if (source.tabId !== undefined) attached.delete(source.tabId);
 });
 
-// A modal dialog blocks every later CDP command on the tab, so close it right away: OK on
-// alerts, Cancel on confirm, prompt and beforeunload (never agree to something on the user's
-// behalf). The agent sees what happened in the tool result.
+// A modal dialog opened by an agent action blocks every later CDP command on the tab, so
+// close it right away: OK on alerts and on "leave page?" (the agent asked to leave), Cancel
+// on confirm and prompt (never agree to something on the user's behalf). The agent sees what
+// happened in the tool result. Dialogs outside agent actions are the user's.
 chrome.debugger.onEvent.addListener((source, method, params) => {
   if (method !== "Page.javascriptDialogOpening" || source.tabId === undefined) return;
+  if (!acting.has(source.tabId)) return;
   const { type, message } = params as { type: string; message: string };
-  const accept = type === "alert";
+  const accept = type === "alert" || type === "beforeunload";
   const list = dialogs.get(source.tabId) ?? [];
   list.push({ type, message: String(message).slice(0, 500), handled: accept ? "accepted" : "dismissed" });
   dialogs.set(source.tabId, list);

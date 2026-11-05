@@ -49,6 +49,8 @@ async function checkLanded(tab: chrome.tabs.Tab): Promise<void> {
   try {
     await checkUrl(tab.url ?? tab.pendingUrl);
   } catch (error) {
+    // Landing on a browser page (back to chrome://newtab, say) is fine; only blocked sites are not.
+    if (!(error instanceof ToolError) || error.code !== "DOMAIN_BLOCKED") return;
     if (tab.id !== undefined) await chrome.tabs.update(tab.id, { url: "about:blank" }).catch(() => {});
     throw error;
   }
@@ -184,6 +186,21 @@ async function typeInto(tabId: number, index: number, text: string, clear: boole
   if (submit) await cdp.pressKey(tabId, "Enter");
 }
 
+async function fillFields(tabId: number, fields: Array<{ index: number; value: unknown }>): Promise<void> {
+  for (const field of fields) {
+    const index = requireIndex(field as Args);
+    const { kind, checked } = await reader(tabId, "kindOf", index);
+    if (kind === "select") {
+      await reader(tabId, "selectOption", index, String(field.value));
+    } else if (kind === "toggle") {
+      const wanted = field.value === true || field.value === "true";
+      if (wanted !== checked) await clickIndex(tabId, index);
+    } else {
+      await typeInto(tabId, index, String(field.value ?? ""), true, false);
+    }
+  }
+}
+
 /** Adds the dialogs the action opened (and how they were closed) to its result. */
 function withDialogs<T extends object>(tabId: number, data: T): T & { dialogs?: cdp.DialogInfo[] } {
   const opened = cdp.takeDialogs(tabId);
@@ -205,7 +222,7 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
     const tab = await resolveTab(args);
     const index = requireIndex(args);
     cdp.takeDialogs(tab.id);
-    await clickIndex(tab.id, index);
+    await cdp.asAgent(tab.id, () => clickIndex(tab.id, index));
     return { data: withDialogs(tab.id, { clicked: index, tabId: tab.id }), target: `#${index}` };
   },
 
@@ -214,25 +231,15 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
     const index = requireIndex(args);
     const text = String(args.text ?? "");
     cdp.takeDialogs(tab.id);
-    await typeInto(tab.id, index, text, args.clear !== false, args.submit === true);
+    await cdp.asAgent(tab.id, () => typeInto(tab.id, index, text, args.clear !== false, args.submit === true));
     return { data: withDialogs(tab.id, { typed: index, tabId: tab.id }), target: `#${index}` };
   },
 
   async fill_form(args) {
     const tab = await resolveTab(args);
     const fields = Array.isArray(args.fields) ? (args.fields as Array<{ index: number; value: unknown }>) : [];
-    for (const field of fields) {
-      const index = requireIndex(field as Args);
-      const { kind, checked } = await reader(tab.id, "kindOf", index);
-      if (kind === "select") {
-        await reader(tab.id, "selectOption", index, String(field.value));
-      } else if (kind === "toggle") {
-        const wanted = field.value === true || field.value === "true";
-        if (wanted !== checked) await clickIndex(tab.id, index);
-      } else {
-        await typeInto(tab.id, index, String(field.value ?? ""), true, false);
-      }
-    }
+    cdp.takeDialogs(tab.id);
+    await cdp.asAgent(tab.id, () => fillFields(tab.id, fields));
     return {
       data: withDialogs(tab.id, { filled: fields.map((f) => f.index), tabId: tab.id }),
       target: `${fields.length} campos`,
@@ -244,14 +251,17 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
     const url = targetUrl(args.url);
     const action = args.action as "back" | "forward" | "reload" | undefined;
     if (url) await checkUrl(url);
-    const loaded = await waitForLoad(tab.id, () => {
-      if (url) return chrome.tabs.update(tab.id, { url });
-      if (action === "back") return chrome.tabs.goBack(tab.id);
-      if (action === "forward") return chrome.tabs.goForward(tab.id);
-      return chrome.tabs.reload(tab.id);
-    });
+    cdp.takeDialogs(tab.id);
+    const loaded = await cdp.asAgent(tab.id, () =>
+      waitForLoad(tab.id, () => {
+        if (url) return chrome.tabs.update(tab.id, { url });
+        if (action === "back") return chrome.tabs.goBack(tab.id);
+        if (action === "forward") return chrome.tabs.goForward(tab.id);
+        return chrome.tabs.reload(tab.id);
+      }),
+    );
     await checkLanded(loaded);
-    return { data: tabInfo(loaded), target: url ?? action ?? "reload" };
+    return { data: withDialogs(tab.id, tabInfo(loaded)), target: url ?? action ?? "reload" };
   },
 
   async list_tabs() {

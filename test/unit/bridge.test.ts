@@ -246,4 +246,17 @@ describe("bridge", () => {
     });
     expect(result).toBe("4401 fast");
   });
+
+  it("o. once the token is refused, commands fail fast even with a long timeout", async () => {
+    const port = await freePort();
+    await owner(port);
+    const relay = createBridge({ port, token: "c".repeat(64), extensionId: EXT_ID, commandTimeoutMs: 30_000, log: () => {} });
+    cleanups.push(() => relay.close());
+    void relay.start();
+    const started = Date.now();
+    const err = (await relay.send("list_tabs", {}).catch((e) => e)) as ToolError;
+    expect(err.code).toBe("NOT_CONNECTED");
+    expect(err.message).toMatch(/token/i);
+    expect(Date.now() - started).toBeLessThan(4000);
+  });
 });

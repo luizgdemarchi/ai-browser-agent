@@ -370,19 +370,34 @@ export function createBridge(options: BridgeOptions): Bridge {
 
   /** ensureConnected, but gives up with NOT_CONNECTED after `ms`. */
   async function connectedWithin(ms: number): Promise<void> {
+    const refusedError = () =>
+      new ToolError(
+        "NOT_CONNECTED",
+        `Another AI Browser Agent server owns port ${port} and refused this server's token. Make both use the same AI_BROWSER_HOME.`,
+      );
     let timer: NodeJS.Timeout | undefined;
+    let watcher: NodeJS.Timeout | undefined;
     const deadline = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
-        const detail = tokenRefused
-          ? `Another AI Browser Agent server owns port ${port} and refused this server's token. Make both use the same AI_BROWSER_HOME.`
-          : `Could not reach or start the AI Browser Agent server on 127.0.0.1:${port}. Another program may be using the port; set AI_BROWSER_PORT.`;
-        reject(new ToolError("NOT_CONNECTED", detail));
+        reject(
+          tokenRefused
+            ? refusedError()
+            : new ToolError(
+                "NOT_CONNECTED",
+                `Could not reach or start the AI Browser Agent server on 127.0.0.1:${port}. Another program may be using the port; set AI_BROWSER_PORT.`,
+              ),
+        );
       }, ms);
+      // A refused token will not fix itself while we wait: fail now.
+      watcher = setInterval(() => {
+        if (tokenRefused) reject(refusedError());
+      }, 100);
     });
     try {
       await Promise.race([ensureConnected(), deadline]);
     } finally {
       clearTimeout(timer);
+      clearInterval(watcher);
     }
   }
 

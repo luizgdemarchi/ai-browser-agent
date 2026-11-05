@@ -5,7 +5,14 @@ export function normalizeDomain(item: string): string {
   host = host.split(/[/?#]/)[0];
   host = host.startsWith("[") ? host.replace(/^(\[[^\]]*\]).*$/, "$1") : host.replace(/:\d*$/, "");
   host = host.replace(/^\*\.?/, "").replace(/^\.+/, "").replace(/\.+$/, "");
-  return /^(\[[0-9a-f:.]+\]|[a-z0-9_-]+(\.[a-z0-9_-]+)*)$/.test(host) ? host : "";
+  if (!host) return "";
+  // Let the URL parser canonicalize it like the browser does: punycode for accents,
+  // "0x7f.1" -> "127.0.0.1", "[0::1]" -> "[::1]".
+  try {
+    return canonicalHost(new URL(`http://${host}`).hostname);
+  } catch {
+    return "";
+  }
 }
 
 /** Canonical host: lowercase, no trailing dots, IPv4-mapped IPv6 turned into IPv4. */

@@ -172,6 +172,19 @@ async function main() {
       assert(after.text.includes(expected), `page text does not contain "${expected}":\n${after.text}`);
     });
 
+    await step("dialog opened by a click is dismissed and reported", async () => {
+      const page = await json(a, "read_page", { tabId: formTab });
+      const result = JSON.parse(text(await ok(a, "click", { tabId: formTab, index: findIndex(page, "Excluir") })));
+      await sleep(300);
+      const after = await json(a, "read_page", { tabId: formTab });
+      const reported = result.dialogs?.[0];
+      assert(after.text.includes("Excluir: nao"), `confirm was not dismissed:\n${after.text}`);
+      assert(
+        reported && reported.type === "confirm" && reported.handled === "dismissed" && reported.message === "Excluir tudo?",
+        `dialog not reported in the click result: ${JSON.stringify(result)}`,
+      );
+    });
+
     let otherTab;
     await step("C3 new_tab, list_tabs, switch_tab", async () => {
       const created = await json(a, "new_tab", { url: `${BASE}/other.html` });

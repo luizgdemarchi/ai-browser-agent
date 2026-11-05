@@ -46,4 +46,14 @@ describe("isBlocked", () => {
     expect(normalizeDomain("foo bar")).toBe("");
     expect(normalizeDomain("*")).toBe("");
   });
+  it("canonicalizes list items the way the browser canonicalizes hosts", () => {
+    expect(normalizeDomain("0x7f.1")).toBe("127.0.0.1");
+    expect(normalizeDomain("[::ffff:127.0.0.1]")).toBe("127.0.0.1");
+    expect(normalizeDomain("[0::1]")).toBe("[::1]");
+    expect(isBlocked("http://127.0.0.1/", ["0x7f.1"])).toBe(true);
+  });
+  it("accepts internationalized domains", () => {
+    expect(normalizeDomain("açaí.com.br")).toBe(new URL("http://açaí.com.br").hostname);
+    expect(isBlocked("https://www.açaí.com.br/", ["açaí.com.br"])).toBe(true);
+  });
 });
