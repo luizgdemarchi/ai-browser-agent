@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ai-browser-agent",
+  "description": "Control your real Chrome from Claude Code and Codex.",
+  "owner": {
+    "name": "luizgdemarchi",
+    "url": "https://github.com/luizgdemarchi"
+  },
+  "plugins": [
+    {
+      "name": "ai-browser-agent",
+      "description": "Local MCP server + Chrome extension: read pages, click, fill forms, manage tabs and take screenshots in your logged-in Chrome.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

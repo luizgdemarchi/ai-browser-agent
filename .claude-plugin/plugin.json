@@ -1,0 +1,20 @@
+{
+  "name": "ai-browser-agent",
+  "displayName": "AI Browser Agent",
+  "version": "0.2.0",
+  "description": "Lets the agent control your real Chrome (read pages, click, fill forms, tabs, screenshots) through a local MCP server and a Chrome extension, without Playwright.",
+  "author": {
+    "name": "Luiz Gabriel De Marchi Nascimento",
+    "url": "https://github.com/luizgdemarchi"
+  },
+  "homepage": "https://github.com/luizgdemarchi/ai-browser-agent",
+  "repository": "https://github.com/luizgdemarchi/ai-browser-agent",
+  "license": "MIT",
+  "keywords": ["browser", "chrome", "mcp", "automation", "extension"],
+  "mcpServers": {
+    "ai-browser": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/plugin/server.mjs"]
+    }
+  }
+}

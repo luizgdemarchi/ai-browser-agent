@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ai-browser": {
+      "command": "node",
+      "args": ["plugin/server.mjs"],
+      "cwd": "."
+    }
+  }
+}

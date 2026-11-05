@@ -1,0 +1,30 @@
+{
+  "name": "ai-browser-agent",
+  "version": "0.2.0",
+  "description": "Lets the agent control your real Chrome (read pages, click, fill forms, tabs, screenshots) through a local MCP server and a Chrome extension, without Playwright.",
+  "author": {
+    "name": "Luiz Gabriel De Marchi Nascimento",
+    "url": "https://github.com/luizgdemarchi"
+  },
+  "homepage": "https://github.com/luizgdemarchi/ai-browser-agent",
+  "repository": "https://github.com/luizgdemarchi/ai-browser-agent",
+  "license": "MIT",
+  "keywords": ["browser", "chrome", "mcp", "automation", "extension"],
+  "skills": "./skills/",
+  "mcpServers": "./.codex-mcp.json",
+  "interface": {
+    "displayName": "AI Browser Agent",
+    "shortDescription": "Control your real Chrome from Codex",
+    "longDescription": "A local MCP server and a Chrome extension let Codex read pages, click, fill forms, manage tabs and take screenshots in the Chrome you already use, with an on/off switch and a domain blocklist.",
+    "developerName": "Luiz Gabriel De Marchi Nascimento",
+    "category": "Productivity",
+    "capabilities": ["Instructions", "MCP"],
+    "websiteURL": "https://github.com/luizgdemarchi/ai-browser-agent",
+    "defaultPrompt": [
+      "Open example.com in Chrome and tell me what is on the page.",
+      "Fill in the form on the current tab with my details.",
+      "List my open Chrome tabs."
+    ],
+    "brandColor": "#1E2225"
+  }
+}
