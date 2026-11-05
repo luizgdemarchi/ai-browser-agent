@@ -45,7 +45,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** a skill não distingue pela mensagem.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `skills/browser/SKILL.md` (linha de `NOT_CONNECTED`: ler a mensagem, "Try again" uma vez, token, home e porta repassados, e o guia só se a extensão não estiver instalada). Teste novo falhou antes e passa depois.
 
 ### 2. `ELEMENT_NOT_FOUND` aparece só como "número velho"
 - **Arquivo:** `skills/browser/SKILL.md:66`
@@ -58,7 +58,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** só a mensagem de número velho confere com a skill.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `skills/browser/SKILL.md` (linha de `ELEMENT_NOT_FOUND`: usar as opções listadas). Teste novo falhou antes e passa depois.
 
 ### 3. O teste de versão ainda pula os manifests do plugin quando eles faltam
 - **Arquivo:** `test/unit/version.test.ts:19`
@@ -71,7 +71,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** nenhum outro teste exige esses arquivos.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `test/unit/version.test.ts` (exceção removida). Com `.codex-plugin/plugin.json` renomeado, o teste falhou (`×`).
 
 ### 4. "Publicar uma versão" quebra por causa do `"0.2.0"` fixo no teste
 - **Arquivo:** `test/unit/version.test.ts:13-15`, `README.md:206`
@@ -83,7 +83,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** nada atualiza esse literal.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `test/unit/version.test.ts` (caso `is 0.2.0` removido) e `README.md` ("diferentes de `src/shared/version.ts`"). A subida para 0.2.1 só exigiu os 5 arquivos, e o `npm test` passou.
 
 ### 5. Instalação em uma linha pelo `/plugin` não foi verificada
 - **Arquivo:** `README.md:45`
@@ -98,7 +98,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** o C3 testou os dois passos.
 - **Classificação:** hipótese
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md` (os dois passos do `/plugin` como forma principal; linha única só pelo terminal `claude plugin install … --marketplace …`, confirmada no `--help`).
 
 ### 6. Caminho local do autor num documento commitado
 - **Arquivo:** `docs/ciclos/2026-11-05-instalacao-ias/verificacao.md:30`
@@ -110,7 +110,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** o bundle e os manifests estão limpos.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `docs/ciclos/2026-11-05-instalacao-ias/verificacao.md` (`<repo>/plugin/server.mjs`). `grep -c luizg` dá 0.
 
 ### 7. No release, os scripts de instalação rodam com um token de escrita disponível
 - **Arquivo:** `.github/workflows/release.yml:8,16`
@@ -123,7 +123,7 @@ O revisor conferiu sem gerar achado:
 - **Contraprova verificada:** o `gh release create` usa `GH_TOKEN` pelo ambiente.
 - **Classificação:** sugestão
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `.github/workflows/release.yml` e `ci.yml` (`persist-credentials: false` e `npm ci --ignore-scripts`). Verificado no `ci` do commit desta correção.
 
 ### 8. "Retry once" depois de `TIMEOUT` pode repetir uma ação irreversível
 - **Arquivo:** `skills/browser/SKILL.md:68`
@@ -138,7 +138,7 @@ O revisor conferiu sem gerar achado:
   repetir.
 - **Classificação:** sugestão
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `skills/browser/SKILL.md` (linha de `TIMEOUT`: nunca repetir envio, compra ou exclusão). Teste novo falhou antes e passa depois.
 
 ## Critérios do spec
 
@@ -157,3 +157,9 @@ O revisor conferiu sem gerar achado:
 | L3 | pendente | instalação do zero pelo GitHub, feita pelo usuário |
 
 Sem achado crítico ou alto. Os 8 achados são baratos e são corrigidos numa rodada de FIX.
+
+## Depois do FIX
+
+A versão subiu para **0.2.1** nos 5 arquivos. A mudança não veio de um achado: os hosts
+guardam o plugin em cache pela versão, e sem a subida a skill corrigida não chegaria a quem
+já instalou a 0.2.0. O bundle foi regenerado e o `npm test` deu 81/81.

@@ -27,7 +27,7 @@ lógica quebra:
 claude plugin marketplace add <repo>      ✔ Successfully added marketplace: ai-browser-agent
 claude plugin install ai-browser-agent@ai-browser-agent   ✔ Successfully installed plugin
 claude mcp list
-plugin:ai-browser-agent:ai-browser: node C:/Users/luizg/.../ai-browser-agent/plugin/server.mjs - ✔ Connected
+plugin:ai-browser-agent:ai-browser: node <repo>/plugin/server.mjs - ✔ Connected
 claude plugin details ai-browser-agent@ai-browser-agent
   Skills (1)  browser
   MCP servers (1)  ai-browser

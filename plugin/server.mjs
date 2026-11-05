@@ -40367,7 +40367,7 @@ var StdioServerTransport = class {
 var EXTENSION_ID = "cjnpnhbdjkkhlkncmmknhdgcgkocdfea";
 
 // src/shared/version.ts
-var VERSION = "0.2.0";
+var VERSION = "0.2.1";
 
 // src/server/bridge.ts
 import { randomUUID, timingSafeEqual } from "node:crypto";

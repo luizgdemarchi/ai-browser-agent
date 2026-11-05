@@ -16,10 +16,13 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # No install scripts: nothing here needs them (the e2e Chrome download is skipped).
+      - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm run build

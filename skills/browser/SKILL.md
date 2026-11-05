@@ -60,12 +60,12 @@ Every error starts with a code in brackets. What to do:
 
 | Code | Meaning | What you do |
 |---|---|---|
-| `NOT_CONNECTED` | The extension is not connected to the server. | Follow **First-time setup** below with the user. Do not retry in a loop. |
+| `NOT_CONNECTED` | The browser link is down. | Read the error message: if it says "Try again", retry once. If it mentions the token, `AI_BROWSER_HOME` or the port, tell the user exactly that. Otherwise ask whether Chrome is open and the extension is installed and switched on; only if it is not installed, follow **First-time setup**. Never retry in a loop. |
 | `EXTENSION_OFF` | The user switched the extension off. | Ask the user to turn it on in the extension popup. Do not retry until they say so. |
 | `DOMAIN_BLOCKED` | The site is on the user's blocklist. | Stop using that site. Tell the user, and never try another URL, subdomain or trick to reach it. |
-| `ELEMENT_NOT_FOUND` | The element number is stale. | Call `read_page` again and use the new numbers. |
+| `ELEMENT_NOT_FOUND` | The element number is stale, or the element or option does not fit. | Read the message: if it lists the options of a select, use one of them; otherwise call `read_page` again and use the new numbers. |
 | `TAB_NOT_FOUND` | The tab no longer exists. | Call `list_tabs` and pick a tab that exists. |
-| `TIMEOUT` | The page or the browser did not answer in time. | Call `read_page` to see the current state, then retry once at most. |
+| `TIMEOUT` | The page or the browser did not answer in time; the action may still have happened. | Call `read_page` to see the current state. Never retry a submit, send, purchase or delete after a timeout: check the page and ask the user. Other actions may be retried once. |
 | `UNSUPPORTED_PAGE` | Chrome does not let extensions act there (browser pages, the Chrome Web Store), or the URL is not http(s). | Use a normal web page instead, or ask the user to do that step. |
 
 ## Safety rules
@@ -87,8 +87,9 @@ Every error starts with a code in brackets. What to do:
 
 ## First-time setup
 
-When a tool returns `NOT_CONNECTED`, the extension is not installed, not paired or not
-running. Walk the user through these steps, one at a time, and wait for them:
+Use this when `NOT_CONNECTED` comes back and the user says the extension is not installed
+yet (see the error table first). Walk the user through these steps, one at a time, and wait
+for them:
 
 1. Download the extension `.zip` from the latest release:
    https://github.com/luizgdemarchi/ai-browser-agent/releases/latest

@@ -42,14 +42,14 @@ Claude Code / Codex ──MCP (stdio)──► servidor local (Node) ──WebSo
 No Claude Code:
 
 ```
-/plugin install ai-browser-agent --marketplace luizgdemarchi/ai-browser-agent
-```
-
-Em versões mais antigas, em dois passos:
-
-```
 /plugin marketplace add luizgdemarchi/ai-browser-agent
 /plugin install ai-browser-agent@ai-browser-agent
+```
+
+Ou, num passo só, pelo terminal:
+
+```sh
+claude plugin install ai-browser-agent --marketplace luizgdemarchi/ai-browser-agent
 ```
 
 O plugin registra o servidor MCP `ai-browser` e a skill `browser`. Não precisa de
@@ -205,7 +205,7 @@ Depois de mexer em `src/server` ou `src/shared`, rode `npm run build` e commite 
 
 1. Troque a versão em `src/shared/version.ts`, `package.json`,
    `src/extension/manifest.json`, `.claude-plugin/plugin.json` e `.codex-plugin/plugin.json`.
-   O `npm test` aponta os que ficarem para trás.
+   O `npm test` aponta os que ficarem diferentes de `src/shared/version.ts`.
 2. `npm run build`, `npm test` e commit.
 3. `git tag vX.Y.Z` e `git push origin vX.Y.Z`. O workflow `release` roda os testes,
    empacota a extensão e publica o Release com o `.zip`.
