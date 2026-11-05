@@ -15,18 +15,18 @@ Claude Code / Codex ──MCP (stdio)──► servidor local (Node) ──WebSo
   Desligada, ela recusa todos os comandos.
 - Coloque na **lista de domínios bloqueados** (Opções) os sites em que a IA nunca deve
   mexer, como o do seu banco. Vale para o domínio e todos os subdomínios.
-- Enquanto a IA clica ou digita, o Chrome mostra a faixa "AI Browser Agent começou a depurar
-  este navegador". É esperado: as ações usam `chrome.debugger` para virar entrada real de
-  mouse e teclado.
+- Enquanto a IA clica ou digita, o Chrome mostra uma faixa avisando que a extensão está
+  depurando o navegador. É esperado: as ações usam `chrome.debugger` para virar entrada real
+  de mouse e teclado. A exceção é a escolha de opção em `<select>`, feita por script (o
+  evento `change` não tem `isTrusted`).
 - Só a extensão com o ID fixo deste projeto e com o token de pareamento consegue se conectar
   ao servidor. Páginas web não conseguem.
-- Exceção: a escolha de opção em `<select>` é feita por script (o evento `change` não tem
-  `isTrusted`). Cliques, digitação, checkbox e radio são entrada real.
 - O `read_page` nunca devolve o conteúdo de campos de senha: um campo preenchido aparece
   como `••••`.
-- Diálogos JavaScript abertos por uma ação são fechados na hora: `alert` com OK, e
-  `confirm`, `prompt` e "sair da página" com Cancelar. A IA nunca concorda com nada em seu
-  nome, e o resultado da ação informa quais diálogos apareceram.
+- Só os diálogos JavaScript abertos por uma ação da IA são tratados: `alert` recebe OK,
+  "sair da página" é aceito quando a IA pediu para navegar, e `confirm` e `prompt` recebem
+  Cancelar, para a IA nunca concordar com nada em seu nome. O resultado da ação informa
+  quais diálogos apareceram. Os diálogos que você mesmo abrir não são tocados.
 
 ## Requisitos
 
@@ -99,7 +99,7 @@ env = { AI_BROWSER_PORT = "9876" }
 | `click` | clica no elemento pelo número |
 | `type` | digita num campo (`clear` padrão `true`, `submit` aperta Enter) |
 | `fill_form` | preenche vários campos de uma vez (texto, select, checkbox, radio) |
-| `navigate` | abre URL ou `back` / `forward` / `reload`, espera carregar (até 30 s) |
+| `navigate` | abre URL http(s) ou `back` / `forward` / `reload`, espera carregar (até 30 s) |
 | `list_tabs` | lista as abas (id, título, URL, ativa, janela) |
 | `switch_tab` | ativa uma aba |
 | `new_tab` | abre aba nova, opcionalmente numa URL |
@@ -107,8 +107,9 @@ env = { AI_BROWSER_PORT = "9876" }
 | `screenshot` | PNG da área visível da aba |
 
 Sem `tabId`, as ferramentas usam a aba ativa da janela em foco. Os números de `read_page`
-valem até a próxima leitura ou navegação daquela aba. URLs sem esquema (`google.com`) ganham
-`https://`. O `screenshot` de uma aba em segundo plano ativa essa aba antes de capturar,
+valem até a próxima leitura ou navegação daquela aba. `navigate` e `new_tab` aceitam só
+`http`, `https` e `about:blank`; URLs sem esquema (`google.com`) ganham `https://`. O
+`screenshot` de uma aba em segundo plano ativa essa aba antes de capturar,
 porque aba oculta não é desenhada.
 
 ## Códigos de erro
@@ -129,6 +130,9 @@ porque aba oculta não é desenhada.
   Codex estiver aberto. Confira também se a porta em Opções é a mesma do servidor.
 - **"Token recusado"**: o token mudou (por exemplo, você apagou `~/.ai-browser-agent`).
   Copie o novo de lá e salve em Opções.
+- **Erro "refused this server's token. Make both use the same AI_BROWSER_HOME"**: o Claude
+  Code e o Codex estão usando pastas de token diferentes. Deixe `AI_BROWSER_HOME` igual nos
+  dois, ou sem definir em nenhum.
 - **Não lê páginas `chrome://` nem a Chrome Web Store**: o Chrome bloqueia extensões nelas.
 - **Iframes de outro site e shadow DOM fechado** não aparecem no `read_page` nesta versão.
 

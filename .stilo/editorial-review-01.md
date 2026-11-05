@@ -41,7 +41,7 @@
 - **Correção mínima:** dizer que só os diálogos abertos por ações da IA são tratados. `alert`
   recebe OK; "sair da página" é aceito quando a IA pediu para navegar; `confirm` e `prompt`
   recebem Cancelar. Os diálogos do usuário não são tocados.
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md`, item de diálogos da seção de segurança
 
 ### 2. As descrições das ferramentas omitem efeitos colaterais que o agente precisa conhecer
 - **Arquivo:** `src/server/tools.ts` (`screenshot`, `navigate`, `new_tab`, `click`)
@@ -55,7 +55,7 @@
 - **Gravidade:** médio
 - **Confiança:** alta
 - **Correção mínima:** uma frase em cada descrição afetada.
-- **Estado:** aberto
+- **Estado:** corrigido: `src/server/tools.ts` (`click`, `navigate`, `new_tab` e `screenshot`)
 
 ### 3. Solução de problemas sem o caso novo de token recusado entre dois servidores
 - **Arquivo:** `README.md:126-133`
@@ -68,7 +68,7 @@
 - **Confiança:** alta
 - **Correção mínima:** uma entrada nova citando a mensagem e a solução (o mesmo
   `AI_BROWSER_HOME` nos dois).
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md`, nova entrada em Solução de problemas
 
 ### 4. A "Exceção" fica longe da regra que ela excepciona
 - **Arquivo:** `README.md:23`
@@ -78,7 +78,7 @@
 - **Gravidade:** baixo
 - **Confiança:** alta
 - **Correção mínima:** juntar ao item da faixa de depuração.
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md` (a exceção do `<select>` foi para o item da faixa de depuração)
 
 ### 5. Citação literal de um texto do Chrome que não foi conferido
 - **Arquivo:** `README.md:18-19`
@@ -89,7 +89,7 @@
 - **Confiança:** média
 - **Correção mínima:** descrever em vez de citar ("uma faixa avisando que a extensão está
   depurando o navegador").
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md` (a faixa é descrita, não citada)
 
 ### 6. Mensagem de token recusado manda o usuário para outro documento
 - **Arquivo:** `src/extension/popup.ts:22`, `src/extension/options.ts:26`
@@ -100,7 +100,7 @@
 - **Gravidade:** baixo
 - **Confiança:** alta
 - **Correção mínima:** citar o caminho `~/.ai-browser-agent/token`.
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/popup.ts:22` e `src/extension/options.ts:26` (citam `~/.ai-browser-agent/token`)
 
 ### 7. Estado vazio do pareamento sem próximo passo
 - **Arquivo:** `src/extension/options.ts:23`
@@ -109,7 +109,7 @@
 - **Gravidade:** baixo
 - **Confiança:** alta
 - **Correção mínima:** "Sem token: cole o token acima e clique em Salvar token."
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/options.ts:23`
 
 ### 8. A tabela de ferramentas não diz quais URLs o `navigate` aceita
 - **Arquivo:** `README.md:102` e `:110`
@@ -119,4 +119,4 @@
 - **Gravidade:** baixo
 - **Confiança:** alta
 - **Correção mínima:** "abre URL http(s)" na tabela, e a frase sobre o esquema completada.
-- **Estado:** aberto
+- **Estado:** corrigido: `README.md` (tabela e parágrafo sobre `navigate` e `new_tab`)

@@ -19,7 +19,7 @@ async function render(): Promise<void> {
     connection.textContent = "Sem token: cole o token em Opções e pareamento.";
   } else if (session.authFailed) {
     dot.classList.add("erro");
-    connection.textContent = "Token recusado: copie o token de novo do arquivo indicado no README.";
+    connection.textContent = "Token recusado: copie de novo o token de ~/.ai-browser-agent/token e salve em Opções.";
   } else if (session.connected) {
     dot.classList.add("ok");
     connection.textContent = "Conectada ao servidor";

@@ -16,7 +16,8 @@ const DEFINITIONS = {
     schema: { tabId },
   },
   click: {
-    description: "Click an element by its number from read_page, as a real mouse click. Call read_page first.",
+    description: "Click an element by its number from read_page, as a real mouse click. Call read_page first. " +
+      "JavaScript dialogs the click opens are closed (alert: OK, confirm/prompt: Cancel) and listed in the result.",
     schema: { index, tabId },
   },
   type: {
@@ -43,6 +44,7 @@ const DEFINITIONS = {
   navigate: {
     description:
       "Open a URL in the tab, or go back, forward or reload. Pass exactly one of url or action. " +
+      "Only http(s) and about:blank; https:// is added when the scheme is missing. " +
       "Returns when the page finishes loading (up to 30 s).",
     schema: {
       url: z.string().optional(),
@@ -59,7 +61,7 @@ const DEFINITIONS = {
     schema: { tabId: z.number().int() },
   },
   new_tab: {
-    description: "Open a new active tab, optionally at a URL, and wait for it to load.",
+    description: "Open a new active tab, optionally at an http(s) URL, and wait for it to load.",
     schema: { url: z.string().optional() },
   },
   close_tab: {
@@ -67,7 +69,7 @@ const DEFINITIONS = {
     schema: { tabId: z.number().int() },
   },
   screenshot: {
-    description: "Take a PNG screenshot of the visible area of the tab.",
+    description: "Take a PNG screenshot of the visible area of the tab. A background tab is activated first (hidden tabs are not painted).",
     schema: { tabId },
   },
 } satisfies Record<ToolName, { description: string; schema: z.ZodRawShape }>;

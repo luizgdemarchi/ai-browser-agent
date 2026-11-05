@@ -20,10 +20,10 @@ async function renderStatus(): Promise<void> {
   const [settings, session] = await Promise.all([getSettings(), getSession()]);
   pairDot.className = "dot";
   if (!settings.token) {
-    pairStatus.textContent = "Sem token.";
+    pairStatus.textContent = "Sem token: cole o token acima e clique em Salvar token.";
   } else if (session.authFailed) {
     pairDot.classList.add("erro");
-    pairStatus.textContent = "Token recusado pelo servidor. Copie o token de novo do arquivo.";
+    pairStatus.textContent = "Token recusado pelo servidor. Copie de novo o token de ~/.ai-browser-agent/token.";
   } else if (session.connected) {
     pairDot.classList.add("ok");
     pairStatus.textContent = "Pareada e conectada.";
