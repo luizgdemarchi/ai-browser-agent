@@ -1,6 +1,6 @@
 {
   "name": "ai-browser-agent",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Lets the agent control your real Chrome (read pages, click, fill forms, tabs, screenshots) through a local MCP server and a Chrome extension, without Playwright.",
   "author": {
     "name": "Luiz Gabriel De Marchi Nascimento",
