@@ -93,3 +93,29 @@ all e2e steps passed
 ```
 
 C7 atendido.
+
+## C8 — workflow `ci` no GitHub
+
+`560aeb5 completed success` (`gh run list --workflow ci`). Os dois runs anteriores também
+passaram: `fd27049` e `3535cd2`.
+
+O Actions atrasou o evento de push do `cb0ce59` em mais de 2 minutos, e o
+`gh workflow run ci` respondeu `HTTP 500: Failed to run workflow dispatch`, mesmo com a
+página de status do GitHub mostrando "operational". O run do `cb0ce59` acabou entrando na
+fila depois. Por causa disso, o `ci` ganhou `workflow_dispatch` (`560aeb5`).
+
+## C6 — Release v0.2.0
+
+```
+git push origin v0.2.0      refs/tags/v0.2.0
+gh run list --workflow release   v0.2.0 completed success
+gh release view v0.2.0      ai-browser-agent-extension-v0.2.0.zip 18422 bytes
+unzip -p <zip> manifest.json    manifest version 0.2.0 | key present True
+```
+
+Conteúdo do `.zip`, todo na raiz: `manifest.json`, `background.js`, `offscreen.html` e
+`.js`, `popup.html` e `.js`, `options.html` e `.js`, `reader.js`, `ui.css` e `icons/`.
+
+A extensão descompactada do `.zip` carrega no Chrome for Testing 156:
+`service worker chrome-extension://cjnpnhbdjkkhlkncmmknhdgcgkocdfea/background.js`, com o
+mesmo ID fixo.
