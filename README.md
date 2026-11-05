@@ -33,9 +33,10 @@ Claude Code / Codex ──MCP (stdio)──► servidor local (Node) ──WebSo
 
 ## Requisitos
 
-- Node.js 20 ou mais novo no `PATH` (o plugin roda o servidor com `node`)
+- Node.js no `PATH`, porque o plugin roda o servidor com `node` (testado com Node 24)
 - Google Chrome 116 ou mais novo
-- Claude Code 2.1.275 ou mais novo, ou Codex CLI 0.166 ou mais novo
+- Claude Code ou Codex CLI com suporte a plugins (testado com Claude Code 2.1.318 e Codex
+  CLI 0.166.0)
 
 ## Instalar no Claude Code
 
