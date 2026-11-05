@@ -43,6 +43,16 @@ async function checkUrl(url: string | undefined): Promise<void> {
   }
 }
 
+/** Checks where a tab ended up after loading; a blocked destination sends the tab to about:blank. */
+async function checkLanded(tab: chrome.tabs.Tab): Promise<void> {
+  try {
+    await checkUrl(tab.url ?? tab.pendingUrl);
+  } catch (error) {
+    if (tab.id !== undefined) await chrome.tabs.update(tab.id, { url: "about:blank" }).catch(() => {});
+    throw error;
+  }
+}
+
 async function getTab(tabId: number): Promise<chrome.tabs.Tab> {
   try {
     return await chrome.tabs.get(tabId);
@@ -220,6 +230,7 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
       if (action === "forward") return chrome.tabs.goForward(tab.id);
       return chrome.tabs.reload(tab.id);
     });
+    await checkLanded(loaded);
     return { data: tabInfo(loaded), target: url ?? action ?? "reload" };
   },
 
@@ -253,6 +264,7 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
     }
     const created = await chrome.tabs.create({ url, active: true });
     const tab = await waitForLoad(created.id!, async () => {}, true);
+    await checkLanded(tab);
     return { data: tabInfo(tab), target: new URL(url).hostname };
   },
 
@@ -266,6 +278,8 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
   async screenshot(args) {
     const tab = await resolveTab(args);
     const data = await cdp.screenshot(tab.id);
+    // The page may have navigated to a blocked site while the capture ran.
+    await checkUrl((await getTab(tab.id)).url);
     return { data: { tabId: tab.id, data, mimeType: "image/png" }, target: `aba ${tab.id}` };
   },
 };

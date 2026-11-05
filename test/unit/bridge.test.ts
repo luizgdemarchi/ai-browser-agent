@@ -187,4 +187,63 @@ describe("bridge", () => {
     expect(err).toBeInstanceOf(ToolError);
     expect(err.code).toBe("TIMEOUT");
   });
+
+  it("k. a relay whose token is refused fails the command instead of hanging", async () => {
+    const port = await freePort();
+    await owner(port);
+    const relay = createBridge({ port, token: "b".repeat(64), extensionId: EXT_ID, commandTimeoutMs: 1500, log: () => {} });
+    cleanups.push(() => relay.close());
+    void relay.start();
+    const started = Date.now();
+    const err = (await relay.send("list_tabs", {}).catch((e) => e)) as ToolError;
+    expect(err).toBeInstanceOf(ToolError);
+    expect(err.code).toBe("NOT_CONNECTED");
+    expect(err.message).toMatch(/token/i);
+    expect(Date.now() - started).toBeLessThan(4000);
+  });
+
+  it("l. a port held by a process that never answers fails the command instead of hanging", async () => {
+    const port = await freePort();
+    // Accepts and reads, but never answers the WebSocket upgrade.
+    const mute = createServer((s) => s.resume());
+    await new Promise<void>((r) => mute.listen(port, "127.0.0.1", () => r()));
+    cleanups.push(() => new Promise<void>((r) => mute.close(() => r())));
+    const b = createBridge({ port, token: TOKEN, extensionId: EXT_ID, commandTimeoutMs: 1500, log: () => {} });
+    cleanups.push(() => b.close());
+    void b.start();
+    const started = Date.now();
+    const err = (await b.send("list_tabs", {}).catch((e) => e)) as ToolError;
+    expect(err).toBeInstanceOf(ToolError);
+    expect(err.code).toBe("NOT_CONNECTED");
+    expect(Date.now() - started).toBeLessThan(4000);
+  });
+
+  it("m. a command in flight fails at once when another extension connection replaces it", async () => {
+    const port = await freePort();
+    const b = await owner(port, { commandTimeoutMs: 10_000 });
+    const first = ext(port, { silent: true });
+    await waitFor(() => first.connected());
+    const pendingCall = b.send("list_tabs", {}).catch((e) => e);
+    await sleep(100);
+    const second = ext(port);
+    await waitFor(() => second.connected());
+    const started = Date.now();
+    const err = (await pendingCall) as ToolError;
+    expect(err).toBeInstanceOf(ToolError);
+    expect(err.code).toBe("NOT_CONNECTED");
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
+  it("n. closes an unauthenticated connection that sends a large first frame", async () => {
+    const port = await freePort();
+    await owner(port);
+    const result = await new Promise<string>((resolve) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+      const started = Date.now();
+      ws.on("error", () => {});
+      ws.on("open", () => ws.send("x".repeat(5000)));
+      ws.on("close", (code) => resolve(`${code} ${Date.now() - started < 1000 ? "fast" : "slow"}`));
+    });
+    expect(result).toBe("4401 fast");
+  });
 });

@@ -35,6 +35,8 @@ interface Pending {
   resolve(data: unknown): void;
   reject(error: ToolError): void;
   timer: NodeJS.Timeout;
+  /** The socket the command went out on. */
+  socket: WebSocket;
 }
 
 /** Where the owner must send the result of a command it forwarded to the extension. */
@@ -42,9 +44,15 @@ interface Forwarded {
   relay: WebSocket;
   relayId: string;
   timer: NodeJS.Timeout;
+  /** The extension socket the command went out on. */
+  extension: WebSocket;
 }
 
 const RELAY_RETRY_MS = 300;
+const REFUSED_RETRY_MS = 2000;
+const HANDSHAKE_TIMEOUT_MS = 3000;
+/** Largest frame accepted before authentication; a hello is far smaller. */
+const MAX_HELLO_BYTES = 4096;
 
 function tokensMatch(given: unknown, expected: string): boolean {
   if (typeof given !== "string") return false;
@@ -60,6 +68,11 @@ function parse(raw: WebSocket.RawData): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+function rawLength(raw: WebSocket.RawData): number {
+  if (Array.isArray(raw)) return raw.reduce((n, b) => n + b.length, 0);
+  return raw instanceof ArrayBuffer ? raw.byteLength : raw.length;
 }
 
 function toError(result: Extract<ResultMessage, { ok: false }>): ToolError {
@@ -87,6 +100,10 @@ export function createBridge(options: BridgeOptions): Bridge {
   let upstream: WebSocket | null = null;
   let upstreamReady = false;
   let connecting: Promise<void> | null = null;
+  /** Set while the owner keeps refusing our token. */
+  let tokenRefused = false;
+  /** Relay socket still in its handshake. */
+  let dialing: WebSocket | null = null;
 
   // Commands sent by this server, in either role.
   const pending = new Map<string, Pending>();
@@ -117,16 +134,25 @@ export function createBridge(options: BridgeOptions): Bridge {
     return null;
   }
 
-  function dropExtension(socket: WebSocket): void {
-    if (extension !== socket) return;
-    extension = null;
-    const error = new ToolError("NOT_CONNECTED", "The browser extension disconnected while running the command.");
-    failAllPending(error);
-    for (const [id, f] of forwarded) {
-      clearTimeout(f.timer);
-      sendResult(f.relay, f.relayId, error);
-      forwarded.delete(id);
+  /** Fails at once every command that went out on this extension socket. */
+  function failCommandsOn(socket: WebSocket, error: ToolError): void {
+    for (const [id, p] of pending) {
+      if (p.socket !== socket) continue;
+      clearTimeout(p.timer);
+      pending.delete(id);
+      p.reject(error);
     }
+    for (const [id, f] of forwarded) {
+      if (f.extension !== socket) continue;
+      clearTimeout(f.timer);
+      forwarded.delete(id);
+      sendResult(f.relay, f.relayId, error);
+    }
+  }
+
+  function dropExtension(socket: WebSocket, error: ToolError): void {
+    if (extension === socket) extension = null;
+    failCommandsOn(socket, error);
   }
 
   function sendResult(socket: WebSocket, id: string, outcome: ToolError | { data: unknown }): void {
@@ -165,7 +191,7 @@ export function createBridge(options: BridgeOptions): Bridge {
       forwarded.delete(id);
       sendResult(relay, cmd.id, timeoutError(cmd.tool));
     }, commandTimeoutMs);
-    forwarded.set(id, { relay, relayId: cmd.id, timer });
+    forwarded.set(id, { relay, relayId: cmd.id, timer, extension });
     extension.send(JSON.stringify({ type: "command", id, tool: cmd.tool, args: cmd.args ?? {} }));
   }
 
@@ -175,6 +201,11 @@ export function createBridge(options: BridgeOptions): Bridge {
     const helloTimer = setTimeout(() => socket.close(CLOSE_UNAUTHORIZED, "hello timeout"), helloTimeoutMs);
 
     socket.on("message", (raw) => {
+      if (!authed && rawLength(raw) > MAX_HELLO_BYTES) {
+        clearTimeout(helloTimer);
+        socket.close(CLOSE_UNAUTHORIZED, "unauthorized");
+        return;
+      }
       const msg = parse(raw);
       if (!msg) return;
       if (!authed) {
@@ -188,8 +219,12 @@ export function createBridge(options: BridgeOptions): Bridge {
         if (authed === "extension") {
           const previous = extension;
           extension = socket;
-          if (previous) {
-            dropExtensionSilently(previous);
+          if (previous && previous !== socket) {
+            dropExtension(
+              previous,
+              new ToolError("NOT_CONNECTED", "Another browser connection replaced the one running this command. Try again."),
+            );
+            previous.close(1000, "replaced");
           }
           log("extension connected");
         }
@@ -202,8 +237,9 @@ export function createBridge(options: BridgeOptions): Bridge {
     socket.on("close", () => {
       clearTimeout(helloTimer);
       if (authed === "extension") {
-        dropExtension(socket);
-        if (!extension) log("extension disconnected");
+        const wasCurrent = extension === socket;
+        dropExtension(socket, new ToolError("NOT_CONNECTED", "The browser extension disconnected while running the command."));
+        if (wasCurrent) log("extension disconnected");
       }
       if (authed === "relay") {
         for (const [id, f] of forwarded) {
@@ -215,13 +251,6 @@ export function createBridge(options: BridgeOptions): Bridge {
       }
     });
     socket.on("error", () => {});
-  }
-
-  /** A newer extension connection replaces an older one; in-flight commands stay on the old one. */
-  function dropExtensionSilently(socket: WebSocket): void {
-    socket.removeAllListeners("close");
-    socket.on("close", () => {});
-    socket.close(1000, "replaced");
   }
 
   function tryOwn(): Promise<boolean> {
@@ -263,11 +292,18 @@ export function createBridge(options: BridgeOptions): Bridge {
 
   function connectRelay(): Promise<boolean> {
     return new Promise((resolve) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${port}`, { maxPayload: 64 * 1024 * 1024 });
+      const ws = new WebSocket(`ws://127.0.0.1:${port}`, {
+        maxPayload: 64 * 1024 * 1024,
+        handshakeTimeout: HANDSHAKE_TIMEOUT_MS,
+      });
+      dialing = ws;
       let settled = false;
+      const welcomeTimer = setTimeout(() => ws.terminate(), HANDSHAKE_TIMEOUT_MS * 2);
       const finish = (ok: boolean) => {
         if (settled) return;
         settled = true;
+        clearTimeout(welcomeTimer);
+        if (dialing === ws) dialing = null;
         resolve(ok);
       };
       ws.on("open", () => ws.send(JSON.stringify({ type: "hello", role: "relay", token })));
@@ -275,6 +311,7 @@ export function createBridge(options: BridgeOptions): Bridge {
         const msg = parse(raw);
         if (!msg) return;
         if (msg.type === "welcome") {
+          tokenRefused = false;
           upstream = ws;
           upstreamReady = true;
           role = "relay";
@@ -285,7 +322,10 @@ export function createBridge(options: BridgeOptions): Bridge {
         if (msg.type === "result" && typeof msg.id === "string") settle(msg.id, msg as unknown as ResultMessage);
       });
       ws.on("close", (code) => {
-        if (code === CLOSE_UNAUTHORIZED) log("the server on this port refused our token");
+        if (code === CLOSE_UNAUTHORIZED) {
+          if (!tokenRefused) log("the server on this port refused our token (different AI_BROWSER_HOME?)");
+          tokenRefused = true;
+        }
         if (upstream === ws) {
           upstream = null;
           upstreamReady = false;
@@ -307,7 +347,7 @@ export function createBridge(options: BridgeOptions): Bridge {
       while (!closed) {
         if (await tryOwn()) break;
         if (await connectRelay()) break;
-        await new Promise((r) => setTimeout(r, RELAY_RETRY_MS));
+        await new Promise((r) => setTimeout(r, tokenRefused ? REFUSED_RETRY_MS : RELAY_RETRY_MS));
       }
     })().finally(() => {
       connecting = null;
@@ -328,8 +368,26 @@ export function createBridge(options: BridgeOptions): Bridge {
     return new ToolError("TIMEOUT", `The browser did not answer ${tool} in ${Math.round(commandTimeoutMs / 1000)} s.`);
   }
 
+  /** ensureConnected, but gives up with NOT_CONNECTED after `ms`. */
+  async function connectedWithin(ms: number): Promise<void> {
+    let timer: NodeJS.Timeout | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        const detail = tokenRefused
+          ? `Another AI Browser Agent server owns port ${port} and refused this server's token. Make both use the same AI_BROWSER_HOME.`
+          : `Could not reach or start the AI Browser Agent server on 127.0.0.1:${port}. Another program may be using the port; set AI_BROWSER_PORT.`;
+        reject(new ToolError("NOT_CONNECTED", detail));
+      }, ms);
+    });
+    try {
+      await Promise.race([ensureConnected(), deadline]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function send(tool: ToolName, args: Record<string, unknown>): Promise<unknown> {
-    await ensureConnected();
+    await connectedWithin(commandTimeoutMs);
     const target = role === "owner" ? extension : upstreamReady ? upstream : null;
     if (!target) throw notConnected();
     const id = randomUUID();
@@ -338,7 +396,7 @@ export function createBridge(options: BridgeOptions): Bridge {
         pending.delete(id);
         reject(timeoutError(tool));
       }, commandTimeoutMs + (role === "relay" ? 1000 : 0));
-      pending.set(id, { resolve, reject, timer });
+      pending.set(id, { resolve, reject, timer, socket: target });
       target.send(JSON.stringify({ type: "command", id, tool, args } satisfies CommandMessage));
     });
   }
@@ -352,6 +410,8 @@ export function createBridge(options: BridgeOptions): Bridge {
     async close() {
       closed = true;
       failAllPending(new ToolError("NOT_CONNECTED", "The MCP server is shutting down."));
+      dialing?.terminate();
+      dialing = null;
       upstream?.close();
       upstream = null;
       upstreamReady = false;

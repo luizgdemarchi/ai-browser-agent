@@ -27,4 +27,12 @@ describe("isBlocked", () => {
     expect(normalizeDomain(" .BB.com.br ")).toBe("bb.com.br");
     expect(isBlocked("https://bb.com.br", [" .bb.com.br "])).toBe(true);
   });
+  it("blocks hosts with a trailing dot", () => {
+    expect(isBlocked("https://bank.com./x", ["bank.com"])).toBe(true);
+    expect(isBlocked("https://www.bank.com../", ["bank.com"])).toBe(true);
+  });
+  it("blocks IPv4-mapped IPv6 addresses of a blocked IPv4", () => {
+    expect(isBlocked("http://[::ffff:127.0.0.1]/", ["127.0.0.1"])).toBe(true);
+    expect(isBlocked("http://[::ffff:7f00:1]:8080/", ["127.0.0.1"])).toBe(true);
+  });
 });

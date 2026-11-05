@@ -84,6 +84,10 @@ async function startClient(label) {
 function serveFixtures() {
   const types = { ".html": "text/html; charset=utf-8" };
   const server = createServer((req, res) => {
+    // /redirect sends the browser to the same server under the name "localhost".
+    if (req.url === "/redirect") {
+      return res.writeHead(302, { location: `http://localhost:${HTTP_PORT}/other.html` }).end();
+    }
     const file = join(FIXTURES, new URL(req.url, BASE).pathname.replace(/^\/+/, ""));
     if (!file.startsWith(FIXTURES)) return res.writeHead(403).end();
     res.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
@@ -215,6 +219,21 @@ async function main() {
       clients.splice(clients.indexOf(a), 1);
       const ms = await succeedsWithin(b, "list_tabs", 10_000);
       console.log(`  list_tabs answered ${ms} ms after the owner closed`);
+    });
+
+    await step("C4 redirect into a blocked domain", async () => {
+      await ui.bringToFront();
+      await ui.goto(`chrome-extension://${EXT_ID}/options.html`);
+      await ui.type("#new-domain", "localhost");
+      await ui.click("#add-domain");
+      await ui.waitForFunction(() => document.querySelector("#blocklist").textContent.includes("localhost"));
+      const result = await call(b, "navigate", { tabId: formTab, url: `${BASE}/redirect` });
+      assert(result.isError && text(result).startsWith("[DOMAIN_BLOCKED]"), `got: ${text(result)}`);
+      assert(!text(result).includes("Outra aba"), "the blocked page title leaked");
+      const tabs = await json(b, "list_tabs");
+      const tab = tabs.find((t) => t.id === formTab);
+      assert(tab && !tab.url.includes("localhost"), `tab should have left the blocked page, is at ${tab?.url}`);
+      await ok(b, "navigate", { tabId: formTab, url: `${BASE}/form.html` });
     });
 
     await step("C4 blocked domain", async () => {
