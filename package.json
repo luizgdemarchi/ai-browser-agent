@@ -2,6 +2,7 @@
   "name": "ai-browser-agent",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Chrome extension + local MCP server that lets Claude Code and Codex control your real Chrome.",
   "scripts": {

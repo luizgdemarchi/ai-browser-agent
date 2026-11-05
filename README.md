@@ -135,3 +135,7 @@ npm run e2e    # teste ponta a ponta com Chrome for Testing
 
 O e2e precisa do Chrome for Testing: `npx puppeteer browsers install chrome`. Ele usa a
 porta `18765` e uma pasta temporária, sem tocar no seu token nem na porta `8765`.
+
+## Licença
+
+[MIT](LICENSE)
