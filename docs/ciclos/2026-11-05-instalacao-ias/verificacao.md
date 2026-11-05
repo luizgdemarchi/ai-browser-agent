@@ -119,3 +119,16 @@ Conteúdo do `.zip`, todo na raiz: `manifest.json`, `background.js`, `offscreen.
 A extensão descompactada do `.zip` carrega no Chrome for Testing 156:
 `service worker chrome-extension://cjnpnhbdjkkhlkncmmknhdgcgkocdfea/background.js`, com o
 mesmo ID fixo.
+
+## Release v0.2.1 (depois do review-05)
+
+Autorizado pelo usuário depois do encerramento do ciclo. O `ci` do `2eeeb07` deu
+`completed success`, e só então a tag foi criada.
+
+```
+git push origin v0.2.1      refs/tags/v0.2.1
+gh run list --workflow release   v0.2.1 completed success
+gh release view v0.2.1      ai-browser-agent-extension-v0.2.1.zip 18422 bytes
+unzip -p <zip> manifest.json    manifest version 0.2.1 | key present True
+gh release list             v0.2.1 Latest
+```
