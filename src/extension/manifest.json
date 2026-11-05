@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "AI Browser Agent",
+  "version": "0.1.0",
+  "description": "Lets local AI agents (Claude Code, Codex) control this browser through a local MCP server.",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "debugger",
+    "tabs",
+    "scripting",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "options_page": "options.html",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArd6OYXDOizVyvWocTeZ2XWubia2qHy7GocJViWwsomNOdXagzv5iIS4URnpg9uURjXwzyz5nioSc4qUvVi+Qm25UWDqa6uVtRhfxZ58lrtdupJe4gWxfggn+ZvKA5GsMlsAiVIaJ6EpRd+spQIqF6y2GW5JgUVRp59TfTxhfvmqQ5CWWqgbbzumIR1BLPI8J+vuRYYnzg7XDp+Pw+KHj2xwJ49gUmxBLwasInHvMffCUZRuIjuIDFkL7QmwCCMIlI2XN5o9+VJVne+Q3GkOT1JrB1CbMnevJ7eAxfPXL7tJgJcrB16mt60oKCD3IkY0cYoP575MHRJh1ZNoL9+pbvwIDAQAB",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

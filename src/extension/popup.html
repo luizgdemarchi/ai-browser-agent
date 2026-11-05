@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>AI Browser Agent</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      body {
+        width: 280px;
+        padding: 12px;
+      }
+      #toggle {
+        display: block;
+        width: 100%;
+        padding: 14px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--cinza) 25%, transparent);
+        text-align: left;
+        transition: background-color 150ms ease-out;
+      }
+      #toggle[aria-pressed="true"] {
+        background: var(--ativo);
+        color: #1e2225;
+      }
+      #toggle-title {
+        display: block;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      #toggle-action {
+        display: block;
+        margin-top: 2px;
+        font-size: 13px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #toggle {
+          transition: none;
+        }
+      }
+      .row {
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="toggle" type="button" aria-pressed="false">
+      <span id="toggle-title">IA sem controle</span>
+      <span id="toggle-action">Ligar</span>
+    </button>
+    <p class="row status" role="status" aria-live="polite">
+      <span id="dot" class="dot" aria-hidden="true"></span>
+      <span id="connection">Desligada</span>
+    </p>
+    <p class="row muted" id="last-action">Nenhuma ação ainda.</p>
+    <p class="row"><a href="options.html" target="_blank" id="options-link">Opções e pareamento</a></p>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Browser Agent: opções</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>
+      main {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 32px 16px;
+      }
+      h1 {
+        margin: 0 0 24px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .field {
+        display: grid;
+        grid-template-columns: 56px 1fr auto;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      #port {
+        width: 96px;
+      }
+      ul {
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      li {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--linha);
+      }
+      .add {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .add input {
+        flex: 1;
+      }
+      @media (max-width: 400px) {
+        .field {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>AI Browser Agent</h1>
+
+      <section aria-labelledby="pairing">
+        <h2 id="pairing">Pareamento</h2>
+        <p class="muted">
+          Rode o Claude Code ou o Codex com o MCP configurado uma vez. Depois, copie o token do
+          arquivo <span class="mono">~/.ai-browser-agent/token</span> e cole aqui.
+        </p>
+        <form id="pair-form">
+          <div class="field">
+            <label for="token">Token</label>
+            <input id="token" class="mono" autocomplete="off" spellcheck="false" />
+            <button id="save-token" type="submit">Salvar token</button>
+          </div>
+          <div class="field">
+            <label for="port">Porta</label>
+            <input id="port" class="mono" inputmode="numeric" />
+          </div>
+        </form>
+        <p class="status" role="status" aria-live="polite">
+          <span id="pair-dot" class="dot" aria-hidden="true"></span>
+          <span id="pair-status"></span>
+        </p>
+      </section>
+
+      <section aria-labelledby="blocked">
+        <h2 id="blocked">Domínios bloqueados</h2>
+        <p class="muted">A IA nunca lê, clica nem tira print nestes domínios e nos subdomínios deles.</p>
+        <ul id="blocklist"></ul>
+        <p id="empty" class="muted">Nenhum domínio bloqueado. Adicione o do seu banco, por exemplo.</p>
+        <form id="add-form" class="add">
+          <input id="new-domain" class="mono" placeholder="novo domínio, ex.: bb.com.br" aria-label="Novo domínio" />
+          <button id="add-domain" type="submit">Adicionar</button>
+        </form>
+        <p id="add-error" class="muted" role="alert"></p>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

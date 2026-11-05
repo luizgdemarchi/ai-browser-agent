@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.stilo/logs/
+.e2e-tmp/

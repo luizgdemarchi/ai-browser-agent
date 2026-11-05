@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Formulário de teste</title>
+  </head>
+  <body>
+    <h1>Cadastro</h1>
+    <form id="f">
+      <p><label for="nome">Nome</label> <input id="nome" name="nome" /></p>
+      <p><label for="email">Email</label> <input id="email" name="email" /></p>
+      <p>
+        <label for="plano">Plano</label>
+        <select id="plano" name="plano">
+          <option value="basico">Básico</option>
+          <option value="pro">Pro</option>
+        </select>
+      </p>
+      <p><input type="checkbox" id="aceito" name="aceito" /> <label for="aceito">Aceito os termos</label></p>
+      <p><button type="submit">Enviar</button></p>
+    </form>
+    <p id="out"></p>
+    <script>
+      // Records whether every user-input event was real browser input. <select> changes are
+      // set by script on purpose (see README), so they are not counted.
+      window.__trust = [];
+      for (const type of ["input", "click", "keydown"]) {
+        document.addEventListener(
+          type,
+          (e) => {
+            if (e.target && e.target.tagName !== "SELECT") window.__trust.push(e.isTrusted);
+          },
+          true,
+        );
+      }
+      document.getElementById("f").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const v = (id) => document.getElementById(id);
+        const trusted = window.__trust.length > 0 && window.__trust.every(Boolean);
+        v("out").textContent =
+          `Enviado: ${v("nome").value} / ${v("email").value} / ${v("plano").value} / ` +
+          `${v("aceito").checked} / trusted=${trusted}`;
+      });
+    </script>
+  </body>
+</html>

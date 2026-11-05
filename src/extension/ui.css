@@ -1,0 +1,99 @@
+:root {
+  --papel: #f4f5f2;
+  --grafite: #1e2225;
+  --cinza: #6b7378;
+  --ativo: #e8a317;
+  --ok: #2e8b57;
+  --erro: #c0392b;
+  --linha: color-mix(in srgb, var(--cinza) 35%, transparent);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papel: #16191b;
+    --grafite: #e6e8e3;
+    --cinza: #8e979c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--grafite);
+  font: 400 13px/1.45 system-ui, sans-serif;
+}
+
+.mono,
+input.mono {
+  font: 400 12px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.muted {
+  color: var(--cinza);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cinza);
+}
+
+.dot.ok {
+  background: var(--ok);
+}
+
+.dot.erro {
+  background: var(--erro);
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ativo);
+  outline-offset: 2px;
+}
+
+input {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--linha);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+
+button {
+  padding: 6px 12px;
+  border: 1px solid var(--grafite);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: color-mix(in srgb, var(--grafite) 8%, transparent);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -1,0 +1,28 @@
+{
+  "name": "ai-browser-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension + local MCP server that lets Claude Code and Codex control your real Chrome.",
+  "scripts": {
+    "build": "node build.mjs && tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "npm run build && node test/e2e/run.mjs",
+    "gen-key": "node scripts/gen-key.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "ws": "^8.22.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/chrome": "*",
+    "@types/node": "*",
+    "@types/ws": "*",
+    "esbuild": "^0.28.2",
+    "happy-dom": "*",
+    "puppeteer": "^25.16.0",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  }
+}
