@@ -1,6 +1,7 @@
 import { build } from "esbuild";
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { serverBundleOptions } from "./scripts/server-bundle.mjs";
 
 const ext = "src/extension";
 const out = "dist/extension";
@@ -46,3 +47,6 @@ for (const f of readdirSync(ext)) {
   }
 }
 if (existsSync(`${ext}/icons`)) cpSync(`${ext}/icons`, `${out}/icons`, { recursive: true });
+
+// Committed single-file server for the Claude Code and Codex plugins.
+await build(serverBundleOptions("plugin/server.mjs"));
