@@ -7,95 +7,141 @@
     <link rel="stylesheet" href="ui.css" />
     <style>
       main {
-        max-width: 560px;
+        max-width: 600px;
         margin: 0 auto;
         padding: 32px 16px;
       }
-      h1 {
-        margin: 0 0 24px;
+      .header {
+        margin-bottom: 24px;
+      }
+      .header img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+      .header .name {
         font-size: 18px;
-        font-weight: 600;
+      }
+      section.card {
+        padding: 24px;
+      }
+      section.card + section.card {
+        margin-top: 16px;
       }
       h2 {
-        margin: 32px 0 8px;
+        margin: 0 0 4px;
         font-size: 15px;
         font-weight: 600;
       }
       .field {
-        display: grid;
-        grid-template-columns: 56px 1fr auto;
+        margin-top: 16px;
+      }
+      .line {
+        display: flex;
         gap: 8px;
-        align-items: center;
-        margin-top: 8px;
+      }
+      .line input {
+        flex: 1;
       }
       #port {
-        width: 96px;
+        width: 120px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 24px;
       }
       ul {
-        margin: 12px 0 0;
+        margin: 16px 0 0;
         padding: 0;
         list-style: none;
+        border-top: 1px solid var(--borda);
       }
       li {
         display: flex;
         gap: 8px;
         align-items: center;
         justify-content: space-between;
-        padding: 6px 0;
-        border-bottom: 1px solid var(--linha);
+        padding: 8px 0;
+        border-bottom: 1px solid var(--borda);
       }
-      .add {
-        display: flex;
-        gap: 8px;
-        margin-top: 12px;
+      li .mono {
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
-      .add input {
-        flex: 1;
+      #empty {
+        margin-top: 16px;
+      }
+      #add-error:not(:empty) {
+        margin-top: 8px;
       }
       @media (max-width: 400px) {
-        .field {
-          grid-template-columns: 1fr;
+        main {
+          padding: 16px;
+        }
+        section.card {
+          padding: 16px;
+        }
+        .line {
+          flex-direction: column;
+        }
+        .line button {
+          width: 100%;
         }
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>AI Browser Agent</h1>
+      <header class="header">
+        <img src="icons/icon-48.png" alt="" width="32" height="32" />
+        <h1 class="name">AI Browser Agent</h1>
+        <span class="version" id="version"></span>
+      </header>
 
-      <section aria-labelledby="pairing">
+      <section class="card" aria-labelledby="pairing">
         <h2 id="pairing">Pareamento</h2>
-        <p class="muted">
+        <p class="desc">
           Rode o Claude Code ou o Codex com o MCP configurado uma vez. Depois, copie o token do
           arquivo <span class="mono">~/.ai-browser-agent/token</span> e cole aqui.
         </p>
         <form id="pair-form">
           <div class="field">
             <label for="token">Token</label>
-            <input id="token" class="mono" autocomplete="off" spellcheck="false" />
-            <button id="save-token" type="submit">Salvar token</button>
+            <div class="line">
+              <input id="token" class="mono" type="password" autocomplete="off" spellcheck="false" />
+              <button id="toggle-token" type="button" aria-pressed="false" aria-controls="token">Mostrar</button>
+            </div>
           </div>
           <div class="field">
             <label for="port">Porta</label>
             <input id="port" class="mono" inputmode="numeric" />
           </div>
+          <div class="actions">
+            <button id="save-token" class="btn-primary" type="submit">Salvar token</button>
+            <p class="pill" role="status" aria-live="polite">
+              <span id="pair-dot" class="dot" aria-hidden="true"></span>
+              <span id="pair-status">Verificando conexão…</span>
+            </p>
+          </div>
         </form>
-        <p class="status" role="status" aria-live="polite">
-          <span id="pair-dot" class="dot" aria-hidden="true"></span>
-          <span id="pair-status"></span>
-        </p>
       </section>
 
-      <section aria-labelledby="blocked">
+      <section class="card" aria-labelledby="blocked">
         <h2 id="blocked">Domínios bloqueados</h2>
-        <p class="muted">A IA nunca lê, clica nem tira print nestes domínios e nos subdomínios deles.</p>
+        <p class="desc">A IA nunca lê, clica nem tira print nestes domínios e nos subdomínios deles.</p>
         <ul id="blocklist"></ul>
         <p id="empty" class="muted">Nenhum domínio bloqueado. Adicione o do seu banco, por exemplo.</p>
-        <form id="add-form" class="add">
-          <input id="new-domain" class="mono" placeholder="novo domínio, ex.: bb.com.br" aria-label="Novo domínio" />
-          <button id="add-domain" type="submit">Adicionar</button>
+        <form id="add-form" class="field">
+          <label for="new-domain">Novo domínio</label>
+          <div class="line">
+            <input id="new-domain" class="mono" placeholder="ex.: bb.com.br" />
+            <button id="add-domain" class="btn-primary" type="submit">Adicionar</button>
+          </div>
+          <p id="add-error" class="erro-texto" role="alert"></p>
         </form>
-        <p id="add-error" class="erro-texto" role="alert"></p>
       </section>
     </main>
     <script src="options.js"></script>

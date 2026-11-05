@@ -11,6 +11,16 @@ const empty = document.getElementById("empty")!;
 const addForm = document.getElementById("add-form") as HTMLFormElement;
 const newDomain = document.getElementById("new-domain") as HTMLInputElement;
 const addError = document.getElementById("add-error")!;
+const toggleToken = document.getElementById("toggle-token") as HTMLButtonElement;
+
+document.getElementById("version")!.textContent = "v" + chrome.runtime.getManifest().version;
+
+toggleToken.addEventListener("click", () => {
+  const show = token.type === "password";
+  token.type = show ? "text" : "password";
+  toggleToken.textContent = show ? "Ocultar" : "Mostrar";
+  toggleToken.setAttribute("aria-pressed", String(show));
+});
 
 async function notify(): Promise<void> {
   await chrome.runtime.sendMessage({ type: "settings-changed" }).catch(() => {});
@@ -54,6 +64,7 @@ function renderList(blocklist: string[]): void {
     }),
   );
   empty.hidden = blocklist.length > 0;
+  list.hidden = blocklist.length === 0;
 }
 
 pairForm.addEventListener("submit", async (event) => {

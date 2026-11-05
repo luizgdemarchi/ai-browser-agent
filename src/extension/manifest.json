@@ -22,6 +22,7 @@
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     }
@@ -30,6 +31,7 @@
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArd6OYXDOizVyvWocTeZ2XWubia2qHy7GocJViWwsomNOdXagzv5iIS4URnpg9uURjXwzyz5nioSc4qUvVi+Qm25UWDqa6uVtRhfxZ58lrtdupJe4gWxfggn+ZvKA5GsMlsAiVIaJ6EpRd+spQIqF6y2GW5JgUVRp59TfTxhfvmqQ5CWWqgbbzumIR1BLPI8J+vuRYYnzg7XDp+Pw+KHj2xwJ49gUmxBLwasInHvMffCUZRuIjuIDFkL7QmwCCMIlI2XN5o9+VJVne+Q3GkOT1JrB1CbMnevJ7eAxfPXL7tJgJcrB16mt60oKCD3IkY0cYoP575MHRJh1ZNoL9+pbvwIDAQAB",
   "icons": {
     "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   }

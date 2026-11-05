@@ -1,5 +1,7 @@
 // Extension state shared by the service worker, popup and options page.
 
+import { iconState, type IconState } from "./icon-state.js";
+
 export const DEFAULT_PORT = 8765;
 
 export interface Settings {
@@ -43,16 +45,20 @@ export async function setSession(patch: Partial<SessionState>): Promise<void> {
   await chrome.storage.session.set(patch);
 }
 
-/** Badge per spec R19: empty when off, "ON" amber when connected, "!" red when not. */
+const ICON_PATHS: Record<IconState["variant"], Record<string, string>> = {
+  padrao: { 16: "icons/icon-16.png", 32: "icons/icon-32.png" },
+  ativo: { 16: "icons/icon-active-16.png", 32: "icons/icon-active-32.png" },
+};
+
+/** Toolbar icon, badge and tooltip per spec 2026-11-05-visual-ui R13/R14 (see icon-state.ts). */
 export async function updateBadge(): Promise<void> {
   const [{ enabled }, { connected }] = await Promise.all([getSettings(), getSession()]);
-  if (!enabled) {
-    await chrome.action.setBadgeText({ text: "" });
-    return;
-  }
-  await chrome.action.setBadgeText({ text: connected ? "ON" : "!" });
-  await chrome.action.setBadgeBackgroundColor({ color: connected ? "#E8A317" : "#C0392B" });
-  await chrome.action.setBadgeTextColor({ color: connected ? "#1E2225" : "#FFFFFF" });
+  const state = iconState(enabled, connected);
+  await chrome.action.setIcon({ path: ICON_PATHS[state.variant] });
+  await chrome.action.setBadgeText({ text: state.badgeText });
+  if (state.badgeColor) await chrome.action.setBadgeBackgroundColor({ color: state.badgeColor });
+  if (state.badgeTextColor) await chrome.action.setBadgeTextColor({ color: state.badgeTextColor });
+  await chrome.action.setTitle({ title: state.title });
 }
 
 export function timeAgo(at: number, now = Date.now()): string {

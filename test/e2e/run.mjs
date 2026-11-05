@@ -143,6 +143,43 @@ async function main() {
       });
     });
 
+    await step("popup has no horizontal scroll", async () => {
+      // Measure at the popup's own width (300 px), as Chrome sizes the real popup to it.
+      const previous = ui.viewport();
+      await ui.setViewport({ width: 300, height: 600 });
+      try {
+        const { scrollWidth, clientWidth } = await ui.evaluate(() => ({
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: document.documentElement.clientWidth,
+        }));
+        assert(scrollWidth <= clientWidth, `popup scrollWidth ${scrollWidth} > clientWidth ${clientWidth}`);
+      } finally {
+        if (previous) await ui.setViewport(previous);
+      }
+    });
+
+    await step("options fit 320 px", async () => {
+      const previous = ui.viewport();
+      await ui.setViewport({ width: 320, height: 800 });
+      try {
+        await ui.goto(`chrome-extension://${EXT_ID}/options.html`);
+        const width = await ui.evaluate(() => document.documentElement.scrollWidth);
+        assert(width <= 320, `options scrollWidth at 320 px is ${width}`);
+      } finally {
+        if (previous) await ui.setViewport(previous);
+      }
+    });
+
+    await step("token show/hide", async () => {
+      await ui.goto(`chrome-extension://${EXT_ID}/options.html`);
+      const type = () => ui.$eval("#token", (el) => el.type);
+      assert((await type()) === "password", `token starts as ${await type()}`);
+      await ui.click("#toggle-token");
+      assert((await type()) === "text", `after Mostrar the token is ${await type()}`);
+      await ui.click("#toggle-token");
+      assert((await type()) === "password", `after Ocultar the token is ${await type()}`);
+    });
+
     const form = await browser.newPage();
     await form.goto(`${BASE}/form.html`);
     await form.bringToFront();

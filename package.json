@@ -9,7 +9,8 @@
     "build": "node build.mjs && tsc --noEmit",
     "test": "vitest run",
     "e2e": "npm run build && node test/e2e/run.mjs",
-    "gen-key": "node scripts/gen-key.mjs"
+    "gen-key": "node scripts/gen-key.mjs",
+    "gen-icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

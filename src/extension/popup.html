@@ -6,54 +6,177 @@
     <link rel="stylesheet" href="ui.css" />
     <style>
       body {
-        width: 280px;
-        padding: 12px;
+        width: 300px;
       }
+      .header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--borda);
+      }
+      main {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      /* Control card: the one bold element (design.md § 6) */
       #toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 12px;
         width: 100%;
-        padding: 14px 12px;
-        border: 0;
-        border-radius: 6px;
-        background: color-mix(in srgb, var(--cinza) 25%, transparent);
+        min-height: 72px;
+        padding: 12px 16px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        background: var(--superficie);
+        font-weight: 400;
         text-align: left;
-        transition: background-color 150ms ease-out;
+        white-space: normal;
+        transition: background-color 200ms ease-out, border-color 200ms ease-out;
+      }
+      #toggle:hover {
+        border-color: var(--texto-2);
       }
       #toggle[aria-pressed="true"] {
-        background: var(--ativo);
-        color: #1e2225;
+        border-color: var(--ambar);
+        background: var(--ambar);
+        color: var(--sobre-ambar);
+      }
+      .toggle-text {
+        flex: 1;
+        min-width: 0;
       }
       #toggle-title {
         display: block;
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 600;
       }
-      #toggle-action {
+      #toggle-desc {
         display: block;
-        margin-top: 2px;
-        font-size: 13px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--texto-2);
       }
-      @media (prefers-reduced-motion: reduce) {
-        #toggle {
-          transition: none;
+      #toggle[aria-pressed="true"] #toggle-desc {
+        color: var(--sobre-ambar);
+      }
+      .switch {
+        position: relative;
+        flex: none;
+        width: 40px;
+        height: 24px;
+        border: 2px solid var(--texto-2);
+        border-radius: 999px;
+        transition: border-color 200ms ease-out;
+      }
+      .switch::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--texto-2);
+        transition: transform 200ms ease-out, background-color 200ms ease-out;
+      }
+      #toggle[aria-pressed="true"] .switch {
+        border-color: var(--sobre-ambar);
+      }
+      #toggle[aria-pressed="true"] .switch::after {
+        background: var(--sobre-ambar);
+        transform: translateX(16px);
+      }
+      #toggle.pulse {
+        animation: no-ar 300ms ease-out;
+      }
+      @keyframes no-ar {
+        from {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--ambar) 70%, transparent);
+        }
+        to {
+          box-shadow: 0 0 0 12px color-mix(in srgb, var(--ambar) 0%, transparent);
         }
       }
-      .row {
-        margin-top: 12px;
+      @media (prefers-reduced-motion: reduce) {
+        #toggle,
+        .switch,
+        .switch::after {
+          transition: none;
+        }
+        #toggle.pulse {
+          animation: none;
+        }
+      }
+
+      .pill {
+        justify-self: start;
+      }
+      #last-action {
+        padding: 12px 16px;
+      }
+      .card-title {
+        margin-bottom: 4px;
+        color: var(--texto-2);
+        font-size: 12px;
+      }
+      #last-action-target {
+        overflow-wrap: anywhere;
+      }
+
+      footer {
+        padding: 0 16px 16px;
+      }
+      #options-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        text-decoration: none;
+        color: var(--texto-2);
+      }
+      #options-link:hover {
+        color: var(--texto);
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <button id="toggle" type="button" aria-pressed="false">
-      <span id="toggle-title">IA sem controle</span>
-      <span id="toggle-action">Ligar</span>
-    </button>
-    <p class="row status" role="status" aria-live="polite">
-      <span id="dot" class="dot" aria-hidden="true"></span>
-      <span id="connection">Desligada</span>
-    </p>
-    <p class="row muted" id="last-action">Nenhuma ação ainda.</p>
-    <p class="row"><a href="options.html" target="_blank" id="options-link">Opções e pareamento</a></p>
+    <header class="header">
+      <img src="icons/icon-48.png" alt="" width="24" height="24" />
+      <h1 class="name">AI Browser Agent</h1>
+      <span class="version" id="version"></span>
+    </header>
+    <main>
+      <button id="toggle" type="button" aria-pressed="false">
+        <span class="toggle-text">
+          <span id="toggle-title">IA sem controle</span>
+          <span id="toggle-desc">Clique para a IA poder usar este Chrome.</span>
+        </span>
+        <span class="switch" aria-hidden="true"></span>
+      </button>
+      <p class="pill" role="status" aria-live="polite">
+        <span id="dot" class="dot" aria-hidden="true"></span>
+        <span id="connection">Verificando conexão…</span>
+      </p>
+      <section id="last-action" class="card" aria-labelledby="last-action-title">
+        <p id="last-action-title" class="card-title">Última ação</p>
+        <p id="last-action-empty">Nenhuma ação ainda. Peça algo à IA no Claude Code ou no Codex.</p>
+        <div id="last-action-body" hidden>
+          <p><strong id="last-action-tool"></strong> <span id="last-action-target" class="mono"></span></p>
+          <p id="last-action-time" class="muted"></p>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <a href="options.html" target="_blank" id="options-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        Opções e pareamento
+      </a>
+    </footer>
     <script src="popup.js"></script>
   </body>
 </html>
