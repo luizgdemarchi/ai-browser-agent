@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { EXTENSION_ID } from "../shared/extension-id.js";
+import { VERSION } from "../shared/version.js";
 import { createBridge } from "./bridge.js";
 import { loadConfig } from "./config.js";
 import { registerTools } from "./tools.js";
@@ -8,7 +9,7 @@ import { registerTools } from "./tools.js";
 const config = loadConfig();
 const bridge = createBridge({ port: config.port, token: config.token, extensionId: EXTENSION_ID });
 
-const server = new McpServer({ name: "ai-browser-agent", version: "0.1.0" });
+const server = new McpServer({ name: "ai-browser-agent", version: VERSION });
 registerTools(server, bridge.send);
 
 let shuttingDown = false;

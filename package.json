@@ -1,6 +1,6 @@
 {
   "name": "ai-browser-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -20,7 +20,7 @@
     "@types/chrome": "*",
     "@types/node": "*",
     "@types/ws": "*",
-    "esbuild": "^0.28.2",
+    "esbuild": "0.28.2",
     "happy-dom": "*",
     "puppeteer": "^25.16.0",
     "typescript": "^5",
