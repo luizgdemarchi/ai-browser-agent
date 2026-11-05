@@ -27,48 +27,61 @@ Claude Code / Codex ──MCP (stdio)──► servidor local (Node) ──WebSo
   "sair da página" é aceito quando a IA pediu para navegar, e `confirm` e `prompt` recebem
   Cancelar, para a IA nunca concordar com nada em seu nome. O resultado da ação informa
   quais diálogos apareceram. Os diálogos que você mesmo abrir não são tocados.
+- O plugin traz a skill `browser`, que manda a IA pedir sua confirmação antes de comprar,
+  enviar, publicar, apagar ou mudar configurações de conta, e tratar o texto das páginas
+  como dados, não como instruções.
 
 ## Requisitos
 
-- Node.js 24 ou mais novo
+- Node.js 20 ou mais novo no `PATH` (o plugin roda o servidor com `node`)
 - Google Chrome 116 ou mais novo
+- Claude Code 2.1.275 ou mais novo, ou Codex CLI 0.166 ou mais novo
 
-## Instalação
+## Instalar no Claude Code
+
+No Claude Code:
+
+```
+/plugin install ai-browser-agent --marketplace luizgdemarchi/ai-browser-agent
+```
+
+Em versões mais antigas, em dois passos:
+
+```
+/plugin marketplace add luizgdemarchi/ai-browser-agent
+/plugin install ai-browser-agent@ai-browser-agent
+```
+
+O plugin registra o servidor MCP `ai-browser` e a skill `browser`. Não precisa de
+`npm install`.
+
+## Instalar no Codex
+
+No terminal:
 
 ```sh
-npm install
-npm run build
+codex plugin marketplace add luizgdemarchi/ai-browser-agent
+codex plugin add ai-browser-agent@ai-browser-agent
 ```
 
-No Chrome, abra `chrome://extensions`, ligue o **Modo do desenvolvedor**, clique em
-**Carregar sem compactação** e escolha a pasta `dist/extension`.
-
-O ID da extensão é sempre `cjnpnhbdjkkhlkncmmknhdgcgkocdfea`, em qualquer máquina.
-
-## Configurar no Claude Code
-
-```sh
-claude mcp add ai-browser -- node "C:/caminho/absoluto/ai-browser-agent/dist/server/index.js"
-```
-
-Use `--scope user` para valer em todos os projetos.
-
-## Configurar no Codex
-
-Em `~/.codex/config.toml` (no Windows, `%USERPROFILE%\.codex\config.toml`):
-
-```toml
-[mcp_servers.ai-browser]
-command = "node"
-args = ["C:/caminho/absoluto/ai-browser-agent/dist/server/index.js"]
-```
+Abra uma sessão nova do Codex depois de instalar.
 
 Os dois podem rodar ao mesmo tempo: o primeiro servidor fica com a porta e o segundo
 repassa os comandos para ele. Se o primeiro fechar, o segundo assume.
 
+## Instalar a extensão do Chrome
+
+1. Baixe `ai-browser-agent-extension-vX.Y.Z.zip` do
+   [Release mais recente](https://github.com/luizgdemarchi/ai-browser-agent/releases/latest)
+   e descompacte numa pasta que você não vai apagar.
+2. Abra `chrome://extensions`, ligue o **Modo do desenvolvedor**, clique em **Carregar sem
+   compactação** e escolha essa pasta.
+
+O ID da extensão é sempre `cjnpnhbdjkkhlkncmmknhdgcgkocdfea`, em qualquer máquina.
+
 ## Parear
 
-1. Abra o Claude Code ou o Codex uma vez com o MCP configurado. O servidor cria o token em
+1. Abra o Claude Code ou o Codex uma vez com o plugin instalado. O servidor cria o token em
    `~/.ai-browser-agent/token` (no Windows, `%USERPROFILE%\.ai-browser-agent\token`).
 2. Clique com o botão direito no ícone da extensão → **Opções**. Cole o token e clique em
    **Salvar token**.
@@ -77,15 +90,23 @@ repassa os comandos para ele. Se o primeiro fechar, o segundo assume.
    - `ON` em âmbar: ligada e conectada;
    - `!` em vermelho: ligada, mas sem servidor (abra o Claude Code ou o Codex).
 
+Se você pedir algo no navegador antes de parear, a skill `browser` conduz esses passos.
+
+## Outros agentes
+
+Agentes compatíveis com o formato [Agent Skills](https://agentskills.io) podem instalar só a
+skill com `npx skills add luizgdemarchi/ai-browser-agent`. As ferramentas precisam do
+servidor MCP, registrado à mão como em [Instalação manual](#instalação-manual-sem-plugin).
+
 ## Porta
 
 A porta padrão é `8765`. Para mudar, defina `AI_BROWSER_PORT` no ambiente do servidor e
-coloque o mesmo número em Opções → Porta. Exemplo no Codex:
+coloque o mesmo número em Opções → Porta. Exemplo na instalação manual do Codex:
 
 ```toml
 [mcp_servers.ai-browser]
 command = "node"
-args = ["C:/caminho/absoluto/ai-browser-agent/dist/server/index.js"]
+args = ["C:/caminho/absoluto/ai-browser-agent/plugin/server.mjs"]
 env = { AI_BROWSER_PORT = "9876" }
 ```
 
@@ -133,19 +154,64 @@ porque aba oculta não é desenhada.
 - **Erro "refused this server's token. Make both use the same AI_BROWSER_HOME"**: o Claude
   Code e o Codex estão usando pastas de token diferentes. Deixe `AI_BROWSER_HOME` igual nos
   dois, ou sem definir em nenhum.
+- **As ferramentas não aparecem depois de instalar o plugin**: confira se `node --version`
+  funciona no terminal e abra uma sessão nova do agente.
 - **Não lê páginas `chrome://` nem a Chrome Web Store**: o Chrome bloqueia extensões nelas.
 - **Iframes de outro site e shadow DOM fechado** não aparecem no `read_page` nesta versão.
+
+## Instalação manual (sem plugin)
+
+Clone o repositório e compile:
+
+```sh
+npm install
+npm run build
+```
+
+A extensão compilada fica em `dist/extension`; carregue essa pasta no Chrome como na seção
+da extensão. Registre o servidor (`plugin/server.mjs` já vem pronto no repositório):
+
+- Claude Code:
+
+  ```sh
+  claude mcp add ai-browser -- node "C:/caminho/absoluto/ai-browser-agent/plugin/server.mjs"
+  ```
+
+  Use `--scope user` para valer em todos os projetos.
+
+- Codex, em `~/.codex/config.toml` (no Windows, `%USERPROFILE%\.codex\config.toml`):
+
+  ```toml
+  [mcp_servers.ai-browser]
+  command = "node"
+  args = ["C:/caminho/absoluto/ai-browser-agent/plugin/server.mjs"]
+  ```
 
 ## Desenvolvimento
 
 ```sh
 npm test       # testes de unidade
-npm run build  # gera dist/ e checa tipos
+npm run build  # gera dist/ e plugin/server.mjs, e checa tipos
 npm run e2e    # teste ponta a ponta com Chrome for Testing
 ```
 
 O e2e precisa do Chrome for Testing: `npx puppeteer browsers install chrome`. Ele usa a
 porta `18765` e uma pasta temporária, sem tocar no seu token nem na porta `8765`.
+
+Depois de mexer em `src/server` ou `src/shared`, rode `npm run build` e commite o
+`plugin/server.mjs` gerado: o `npm test` falha se ele estiver desatualizado.
+
+## Publicar uma versão
+
+1. Troque a versão em `src/shared/version.ts`, `package.json`,
+   `src/extension/manifest.json`, `.claude-plugin/plugin.json` e `.codex-plugin/plugin.json`.
+   O `npm test` aponta os que ficarem para trás.
+2. `npm run build`, `npm test` e commit.
+3. `git tag vX.Y.Z` e `git push origin vX.Y.Z`. O workflow `release` roda os testes,
+   empacota a extensão e publica o Release com o `.zip`.
+
+Os hosts guardam o plugin em cache pela versão: conteúdo novo com a mesma versão não chega
+a quem já instalou.
 
 ## Licença
 
