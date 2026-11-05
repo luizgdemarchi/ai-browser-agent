@@ -22,6 +22,11 @@ Claude Code / Codex ──MCP (stdio)──► servidor local (Node) ──WebSo
   ao servidor. Páginas web não conseguem.
 - Exceção: a escolha de opção em `<select>` é feita por script (o evento `change` não tem
   `isTrusted`). Cliques, digitação, checkbox e radio são entrada real.
+- O `read_page` nunca devolve o conteúdo de campos de senha: um campo preenchido aparece
+  como `••••`.
+- Diálogos JavaScript abertos por uma ação são fechados na hora: `alert` com OK, e
+  `confirm`, `prompt` e "sair da página" com Cancelar. A IA nunca concorda com nada em seu
+  nome, e o resultado da ação informa quais diálogos apareceram.
 
 ## Requisitos
 
@@ -102,7 +107,9 @@ env = { AI_BROWSER_PORT = "9876" }
 | `screenshot` | PNG da área visível da aba |
 
 Sem `tabId`, as ferramentas usam a aba ativa da janela em foco. Os números de `read_page`
-valem até a próxima leitura ou navegação daquela aba.
+valem até a próxima leitura ou navegação daquela aba. URLs sem esquema (`google.com`) ganham
+`https://`. O `screenshot` de uma aba em segundo plano ativa essa aba antes de capturar,
+porque aba oculta não é desenhada.
 
 ## Códigos de erro
 

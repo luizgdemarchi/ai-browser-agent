@@ -38,4 +38,10 @@ describe("MCP tool handlers", () => {
     expect(result.isError).toBe(true);
     expect(called).toBe(false);
   });
+  it("gives navigate argument errors a fixed code", async () => {
+    const handlers = createHandlers(async () => null);
+    const result = await handlers.navigate.run({});
+    expect(result.isError).toBe(true);
+    expect((result.content[0] as { text: string }).text).toMatch(/^\[[A-Z_]+\] /);
+  });
 });

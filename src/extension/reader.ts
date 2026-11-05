@@ -64,6 +64,14 @@ function labelOf(el: Element): string {
     const text = clip(labels[0].textContent);
     if (text) return text;
   }
+  if (el.tagName === "INPUT") {
+    const input = el as HTMLInputElement;
+    if (["submit", "button", "reset"].includes(input.type) && input.value.trim()) return clip(input.value);
+    if (input.type === "image") {
+      const alt = input.getAttribute("alt");
+      if (alt?.trim()) return clip(alt);
+    }
+  }
   const placeholder = el.getAttribute("placeholder");
   if (placeholder?.trim()) return clip(placeholder);
   if (el instanceof el.ownerDocument.defaultView!.HTMLSelectElement) {
@@ -80,6 +88,8 @@ function valueOf(el: Element): string | boolean {
   if (tag === "input") {
     const input = el as HTMLInputElement;
     if (input.type === "checkbox" || input.type === "radio") return input.checked;
+    // Never hand passwords to the agent.
+    if (input.type === "password") return input.value ? "••••" : "";
     return input.value;
   }
   if (tag === "select") return (el as HTMLSelectElement).value;

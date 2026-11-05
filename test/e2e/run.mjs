@@ -239,7 +239,7 @@ async function main() {
     await step("C4 blocked domain", async () => {
       await ui.bringToFront();
       await ui.goto(`chrome-extension://${EXT_ID}/options.html`);
-      await ui.type("#new-domain", "127.0.0.1");
+      await ui.type("#new-domain", "127.0.0.1:18080"); // the port must be ignored
       await ui.click("#add-domain");
       await ui.waitForFunction(() => document.querySelector("#blocklist").textContent.includes("127.0.0.1"));
       const result = await call(b, "read_page", { tabId: formTab });

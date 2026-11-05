@@ -33,7 +33,7 @@
 - **Contraprova verificada:** o e2e cadastra o host sem porta.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/shared/blocklist.ts` (`normalizeDomain` tira esquema, caminho, porta e `*.`, e devolve `""` se o item não for um host), e `src/extension/options.ts` recusa item inválido com mensagem. 2 testes novos falharam antes e passam depois, e o e2e agora cadastra `127.0.0.1:18080`.
 
 ### 2. `<input type=submit|button|reset|image>` sai sem rótulo no `read_page`
 - **Arquivo:** `src/extension/reader.ts` (`labelOf`)
@@ -46,7 +46,7 @@
 - **Contraprova verificada:** `labels` e `innerText` de input vêm vazios.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/reader.ts` (`labelOf`: `value` em submit, button e reset; `alt` em image). Teste novo falhou antes e passa depois.
 
 ### 3. Texto secundário abaixo de 4.5:1 no modo claro, e erro sem a cor de erro
 - **Arquivo:** `src/extension/ui.css:4`, `src/extension/options.html` (`#add-error`)
@@ -58,7 +58,7 @@
 - **Contraprova verificada:** no modo escuro dá 5.94 e passa.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/ui.css` (`--cinza` claro passa a `#646c71`, 4.89:1) e `#add-error` com `.erro-texto` (4.97:1 no claro; `#f07a6e` no escuro, 6.49:1).
 
 ### 4. Foco e borda de campo abaixo de 3:1 no modo claro
 - **Arquivo:** `src/extension/ui.css` (`:focus-visible`, `--linha`)
@@ -71,7 +71,7 @@
 - **Contraprova verificada:** o popup não sobrescreve o foco.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/ui.css` (foco em `--grafite`: 14.64:1 no claro, 7.39:1 sobre a chave âmbar; borda de campo em `--cinza`, 4.89:1).
 
 ### 5. As opções ficam presas em "Salvo. Conectando…"
 - **Arquivo:** `src/extension/options.ts`
@@ -85,7 +85,7 @@
 - **Contraprova verificada:** o popup já tem um `setInterval`; as opções não.
 - **Classificação:** confirmado (por leitura)
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/options.ts` (depois de salvar, redesenha o estado a cada 1 s por 10 s). Sem teste de unidade (é DOM da extensão); o passo e2e `pair and turn on through the UI` passa.
 
 ### 6. `navigate` e `new_tab` devolvem dados de domínio bloqueado depois de redirect
 - **Arquivo:** `src/extension/actions.ts`
@@ -111,7 +111,7 @@
 - **Contraprova verificada:** o schema zod é só `z.string()`.
 - **Classificação:** confirmado (por leitura)
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/shared/url.ts` (`normalizeUrl`), usado por `targetUrl` em `src/extension/actions.ts`. 3 testes novos em `test/unit/url.test.ts`.
 
 ### 8. Print de aba em segundo plano pode esperar até o `[TIMEOUT]`
 - **Arquivo:** `src/extension/cdp.ts` (`screenshot`)
@@ -126,7 +126,7 @@
 - **Contraprova verificada:** nenhum código ativa a aba.
 - **Classificação:** hipótese
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/actions.ts` (`screenshot` ativa a aba oculta antes e devolve `activated`) e `src/extension/cdp.ts` (tempo limite de 20 s em toda chamada CDP, que vira `[TIMEOUT]`). Sem teste com interface, porque o e2e roda sem ela.
 
 ### 9. Uma falha no `get-settings` mata o laço de reconexão do offscreen
 - **Arquivo:** `src/extension/offscreen.ts` (`connect`)
@@ -139,7 +139,7 @@
 - **Contraprova verificada:** as chamadas `void connect()` não têm `.catch`.
 - **Classificação:** hipótese
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/offscreen.ts` (try/catch no `get-settings` com `scheduleRetry`). Verificado por leitura e pelo e2e C6a.
 
 ### 10. Diálogo JS (`alert`/`confirm`) trava os comandos CDP seguintes
 - **Arquivo:** `src/extension/cdp.ts`
@@ -153,7 +153,7 @@
 - **Contraprova verificada:** não há `chrome.debugger.onEvent` em lugar nenhum.
 - **Classificação:** hipótese
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/cdp.ts` (`Page.enable`, listener de `Page.javascriptDialogOpening`, aceita `alert` e cancela o resto) e `src/extension/actions.ts` (`withDialogs` em click, type e fill_form). Sem teste automático de diálogo nesta rodada.
 
 ### 11. Erro de argumentos do `navigate` sai sem código, contra o R16
 - **Arquivo:** `src/server/tools.ts` (`navigate needs exactly one of url or action.`)
@@ -165,7 +165,7 @@
 - **Contraprova verificada:** `errorResult` não acrescenta prefixo.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/server/tools.ts` (`formatError("UNSUPPORTED_PAGE", ...)`). Teste novo falhou antes e passa depois.
 
 ### 12. Os testes não exercitam a lógica não trivial do leitor
 - **Arquivo:** `test/unit/reader.test.ts`
@@ -178,7 +178,7 @@
 - **Contraprova verificada:** não existem testes de `actions` nem de `cdp`.
 - **Classificação:** confirmado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `test/unit/reader.test.ts` ganhou rótulo de input submit e image, senha e `kindOf`. Iframe continua sem teste, porque o happy-dom não carrega iframe com mesma origem.
 
 ### 13. `read_page` devolve o valor de campos de senha em texto puro
 - **Arquivo:** `src/extension/reader.ts` (`valueOf`)
@@ -192,7 +192,7 @@
 - **Contraprova verificada:** não há filtro por tipo.
 - **Classificação:** sugestão do revisor, adotada como achado
 - **Origem:** introduzido
-- **Estado:** aberto
+- **Estado:** corrigido: `src/extension/reader.ts` (`valueOf` devolve `••••` para senha). Teste novo falhou antes e passa depois.
 
 ## Critérios do spec
 

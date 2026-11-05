@@ -28,8 +28,16 @@ async function connect(): Promise<void> {
     socket = null;
   }
 
-  const { token, port } = (await chrome.runtime.sendMessage({ type: "get-settings" })) as { token: string; port: number };
+  let settings: { token: string; port: number };
+  try {
+    settings = (await chrome.runtime.sendMessage({ type: "get-settings" })) as { token: string; port: number };
+  } catch {
+    // The service worker may be restarting; try again soon.
+    if (myGeneration === generation) scheduleRetry(FIRST_RETRY_MS);
+    return;
+  }
   if (myGeneration !== generation) return;
+  const { token, port } = settings;
   if (!token) {
     report(false);
     scheduleRetry(RETRY_MS);

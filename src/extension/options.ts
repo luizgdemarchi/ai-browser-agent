@@ -66,14 +66,24 @@ pairForm.addEventListener("submit", async (event) => {
   }
   await setSettings({ token: token.value.trim(), port: portNumber });
   await notify();
+  pairDot.className = "dot";
   pairStatus.textContent = "Salvo. Conectando…";
+  // The connection state may not change (same result as before), so storage events alone
+  // would leave this message up; poll it for a while instead.
+  let checks = 0;
+  const poll = setInterval(() => {
+    if (++checks > 10) clearInterval(poll);
+    void renderStatus();
+  }, 1000);
 });
 
 addForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const domain = normalizeDomain(newDomain.value.replace(/^[a-z]+:\/\//i, "").split("/")[0]);
+  const domain = normalizeDomain(newDomain.value);
   if (!domain) {
-    addError.textContent = "Digite um domínio, por exemplo bb.com.br.";
+    addError.textContent = newDomain.value.trim()
+      ? `"${newDomain.value.trim()}" não é um domínio. Use algo como bb.com.br.`
+      : "Digite um domínio, por exemplo bb.com.br.";
     return;
   }
   addError.textContent = "";

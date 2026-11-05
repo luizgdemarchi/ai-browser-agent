@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { ToolError, type ToolName } from "../shared/protocol.js";
+import { formatError, ToolError, type ToolName } from "../shared/protocol.js";
 
 export type Send = (tool: ToolName, args: Record<string, unknown>) => Promise<unknown>;
 
@@ -90,7 +90,7 @@ export function createHandlers(send: Send): Record<ToolName, Handler> {
       schema,
       async run(args) {
         if (tool === "navigate" && (args.url === undefined) === (args.action === undefined)) {
-          return errorResult("navigate needs exactly one of url or action.");
+          return errorResult(formatError("UNSUPPORTED_PAGE", "navigate needs exactly one of url or action."));
         }
         try {
           const data = await send(tool, args);

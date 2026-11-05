@@ -1,10 +1,11 @@
 :root {
   --papel: #f4f5f2;
   --grafite: #1e2225;
-  --cinza: #6b7378;
+  --cinza: #646c71;
   --ativo: #e8a317;
   --ok: #2e8b57;
   --erro: #c0392b;
+  --erro-texto: #c0392b;
   --linha: color-mix(in srgb, var(--cinza) 35%, transparent);
   color-scheme: light dark;
 }
@@ -14,6 +15,7 @@
     --papel: #16191b;
     --grafite: #e6e8e3;
     --cinza: #8e979c;
+    --erro-texto: #f07a6e;
   }
 }
 
@@ -63,17 +65,21 @@ a {
   color: inherit;
 }
 
+.erro-texto {
+  color: var(--erro-texto);
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid var(--ativo);
+  outline: 2px solid var(--grafite);
   outline-offset: 2px;
 }
 
 input {
   min-width: 0;
   padding: 6px 8px;
-  border: 1px solid var(--linha);
+  border: 1px solid var(--cinza);
   border-radius: 4px;
   background: transparent;
   color: inherit;

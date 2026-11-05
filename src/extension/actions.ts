@@ -1,6 +1,7 @@
 // The MCP tools, as run inside the extension.
 import { isBlocked } from "../shared/blocklist.js";
 import { ToolError, type ToolName } from "../shared/protocol.js";
+import { normalizeUrl } from "../shared/url.js";
 import * as cdp from "./cdp.js";
 import type { PageSnapshot, ReaderApi } from "./reader.js";
 import { getSettings } from "./state.js";
@@ -151,6 +152,14 @@ function waitForLoad(tabId: number, start: () => Promise<unknown>, alreadyStarte
   });
 }
 
+/** The URL to open, with https:// added when missing. */
+function targetUrl(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  const url = normalizeUrl(String(value));
+  if (!url) throw new ToolError("UNSUPPORTED_PAGE", `"${String(value)}" is not a URL. Example: https://example.com.`);
+  return url;
+}
+
 function requireIndex(args: Args, key = "index"): number {
   const value = args[key];
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
@@ -175,6 +184,12 @@ async function typeInto(tabId: number, index: number, text: string, clear: boole
   if (submit) await cdp.pressKey(tabId, "Enter");
 }
 
+/** Adds the dialogs the action opened (and how they were closed) to its result. */
+function withDialogs<T extends object>(tabId: number, data: T): T & { dialogs?: cdp.DialogInfo[] } {
+  const opened = cdp.takeDialogs(tabId);
+  return opened.length ? { ...data, dialogs: opened } : data;
+}
+
 function tabInfo(tab: chrome.tabs.Tab) {
   return { id: tab.id, title: tab.title ?? "", url: tab.url ?? tab.pendingUrl ?? "", active: tab.active, windowId: tab.windowId };
 }
@@ -189,16 +204,18 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
   async click(args) {
     const tab = await resolveTab(args);
     const index = requireIndex(args);
+    cdp.takeDialogs(tab.id);
     await clickIndex(tab.id, index);
-    return { data: { clicked: index, tabId: tab.id }, target: `#${index}` };
+    return { data: withDialogs(tab.id, { clicked: index, tabId: tab.id }), target: `#${index}` };
   },
 
   async type(args) {
     const tab = await resolveTab(args);
     const index = requireIndex(args);
     const text = String(args.text ?? "");
+    cdp.takeDialogs(tab.id);
     await typeInto(tab.id, index, text, args.clear !== false, args.submit === true);
-    return { data: { typed: index, tabId: tab.id }, target: `#${index}` };
+    return { data: withDialogs(tab.id, { typed: index, tabId: tab.id }), target: `#${index}` };
   },
 
   async fill_form(args) {
@@ -216,12 +233,15 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
         await typeInto(tab.id, index, String(field.value ?? ""), true, false);
       }
     }
-    return { data: { filled: fields.map((f) => f.index), tabId: tab.id }, target: `${fields.length} campos` };
+    return {
+      data: withDialogs(tab.id, { filled: fields.map((f) => f.index), tabId: tab.id }),
+      target: `${fields.length} campos`,
+    };
   },
 
   async navigate(args) {
     const tab = await resolveTab(args);
-    const url = typeof args.url === "string" ? args.url : undefined;
+    const url = targetUrl(args.url);
     const action = args.action as "back" | "forward" | "reload" | undefined;
     if (url) await checkUrl(url);
     const loaded = await waitForLoad(tab.id, () => {
@@ -256,7 +276,7 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
   },
 
   async new_tab(args) {
-    const url = typeof args.url === "string" ? args.url : undefined;
+    const url = targetUrl(args.url);
     await checkUrl(url);
     if (!url) {
       const tab = await chrome.tabs.create({ active: true });
@@ -277,10 +297,16 @@ const tools: Record<ToolName, (args: Args) => Promise<ToolOutcome>> = {
 
   async screenshot(args) {
     const tab = await resolveTab(args);
+    // A hidden tab paints no frames, so the capture could wait forever; show it first.
+    const activated = !tab.active;
+    if (activated) {
+      await chrome.tabs.update(tab.id, { active: true });
+      await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+    }
     const data = await cdp.screenshot(tab.id);
     // The page may have navigated to a blocked site while the capture ran.
     await checkUrl((await getTab(tab.id)).url);
-    return { data: { tabId: tab.id, data, mimeType: "image/png" }, target: `aba ${tab.id}` };
+    return { data: { tabId: tab.id, data, mimeType: "image/png", activated }, target: `aba ${tab.id}` };
   },
 };
 

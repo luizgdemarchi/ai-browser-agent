@@ -1,5 +1,11 @@
+/** Host part of a blocklist item ("https://*.bb.com.br:443/x" -> "bb.com.br"); "" if it is not a host. */
 export function normalizeDomain(item: string): string {
-  return item.trim().toLowerCase().replace(/^\.+/, "").replace(/\.+$/, "");
+  let host = item.trim().toLowerCase();
+  host = host.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+  host = host.split(/[/?#]/)[0];
+  host = host.startsWith("[") ? host.replace(/^(\[[^\]]*\]).*$/, "$1") : host.replace(/:\d*$/, "");
+  host = host.replace(/^\*\.?/, "").replace(/^\.+/, "").replace(/\.+$/, "");
+  return /^(\[[0-9a-f:.]+\]|[a-z0-9_-]+(\.[a-z0-9_-]+)*)$/.test(host) ? host : "";
 }
 
 /** Canonical host: lowercase, no trailing dots, IPv4-mapped IPv6 turned into IPv4. */

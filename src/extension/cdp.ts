@@ -2,11 +2,40 @@
 import { ToolError } from "../shared/protocol.js";
 
 const PROTOCOL_VERSION = "1.3";
+const COMMAND_TIMEOUT_MS = 20_000;
 const attached = new Set<number>();
+
+export interface DialogInfo {
+  type: string;
+  message: string;
+  /** What the extension did: alerts are accepted, everything else is dismissed. */
+  handled: "accepted" | "dismissed";
+}
+/** JavaScript dialogs (alert/confirm/prompt/beforeunload) opened per tab since the last take. */
+const dialogs = new Map<number, DialogInfo[]>();
 
 chrome.debugger.onDetach.addListener((source) => {
   if (source.tabId !== undefined) attached.delete(source.tabId);
 });
+
+// A modal dialog blocks every later CDP command on the tab, so close it right away: OK on
+// alerts, Cancel on confirm, prompt and beforeunload (never agree to something on the user's
+// behalf). The agent sees what happened in the tool result.
+chrome.debugger.onEvent.addListener((source, method, params) => {
+  if (method !== "Page.javascriptDialogOpening" || source.tabId === undefined) return;
+  const { type, message } = params as { type: string; message: string };
+  const accept = type === "alert";
+  const list = dialogs.get(source.tabId) ?? [];
+  list.push({ type, message: String(message).slice(0, 500), handled: accept ? "accepted" : "dismissed" });
+  dialogs.set(source.tabId, list);
+  void chrome.debugger.sendCommand(source, "Page.handleJavaScriptDialog", { accept }).catch(() => {});
+});
+
+export function takeDialogs(tabId: number): DialogInfo[] {
+  const list = dialogs.get(tabId) ?? [];
+  dialogs.delete(tabId);
+  return list;
+}
 
 export function mapChromeError(error: unknown): ToolError {
   if (error instanceof ToolError) return error;
@@ -29,14 +58,24 @@ export async function ensureAttached(tabId: number): Promise<void> {
     if (!/already attached/i.test(String((error as Error)?.message))) throw mapChromeError(error);
   }
   attached.add(tabId);
+  await chrome.debugger.sendCommand({ tabId }, "Page.enable").catch(() => {});
 }
 
 async function send<T = unknown>(tabId: number, method: string, params?: object): Promise<T> {
   await ensureAttached(tabId);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new ToolError("TIMEOUT", `The page did not respond to ${method} in ${COMMAND_TIMEOUT_MS / 1000} s.`)),
+      COMMAND_TIMEOUT_MS,
+    );
+  });
   try {
-    return (await chrome.debugger.sendCommand({ tabId }, method, params)) as T;
+    return (await Promise.race([chrome.debugger.sendCommand({ tabId }, method, params), timeout])) as T;
   } catch (error) {
     throw mapChromeError(error);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

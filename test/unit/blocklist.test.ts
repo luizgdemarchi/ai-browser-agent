@@ -35,4 +35,15 @@ describe("isBlocked", () => {
     expect(isBlocked("http://[::ffff:127.0.0.1]/", ["127.0.0.1"])).toBe(true);
     expect(isBlocked("http://[::ffff:7f00:1]:8080/", ["127.0.0.1"])).toBe(true);
   });
+  it("normalizes ports, wildcards, schemes and paths in list items", () => {
+    expect(normalizeDomain("127.0.0.1:8765")).toBe("127.0.0.1");
+    expect(normalizeDomain("*.bb.com.br")).toBe("bb.com.br");
+    expect(normalizeDomain("https://BB.com.br/conta?x=1")).toBe("bb.com.br");
+    expect(isBlocked("http://127.0.0.1/", ["127.0.0.1:8765"])).toBe(true);
+    expect(isBlocked("https://www.bb.com.br/", ["*.bb.com.br"])).toBe(true);
+  });
+  it("turns items that are not a host into an empty string", () => {
+    expect(normalizeDomain("foo bar")).toBe("");
+    expect(normalizeDomain("*")).toBe("");
+  });
 });
